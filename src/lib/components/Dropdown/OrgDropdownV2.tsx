@@ -123,7 +123,7 @@ export default function OrgDropdownV2() {
           <div style={{ display: "flex", flexDirection: "row", justifyContent: "space-between", alignItems: "center", width: "100%" }}>
               <div>
               <img
-                src={selectedOrg.image}
+                src={selectedOrg.image || "/default-org-avatar.png"}
                 alt={selectedOrg.name}
                 className="mr-2 avatar rounded"
                 style={{ border: "1px solid #E9EAEB" }}
@@ -176,7 +176,7 @@ export default function OrgDropdownV2() {
               >
               <div style={{ display: "flex", flexDirection: "row", alignItems: "center", gap: 10 }}>
                 <img
-                  src={org.image}
+                  src={org.image || "/default-org-avatar.png"}
                   alt={org.name}
                   style={{ border: "1px solid #E9EAEB", borderRadius: "50%", width: 24, height: 24 }}
                 />
