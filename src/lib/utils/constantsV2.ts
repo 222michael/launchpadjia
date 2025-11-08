@@ -3,8 +3,8 @@ const jobOpeningsOriginPath = "/job-openings";
 const dashboardOriginPath = "/dashboard";
 
 export const pathConstants = {
-  employee: "https://www.hellojia.ai",
-  employer: "https://www.hirejia.ai",
+  employee: originPath, // Use local origin for development
+  employer: originPath, // Use local origin for development
   whitecloak: "https://www.whitecloak.com",
   home: originPath,
   jobOpenings: jobOpeningsOriginPath,

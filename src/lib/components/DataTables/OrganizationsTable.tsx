@@ -212,7 +212,7 @@ export default function OrganizationsTable() {
                                                         if (e.defaultPrevented) return;
                                                         e.preventDefault();
                                                         setMenuOpen(false);
-                                                        window.location.href = `https://hirejia.ai/recruiter-dashboard?orgID=${organization._id}`;
+                                                        window.location.href = `/recruiter-dashboard?orgID=${organization._id}`;
                                                     }}>
                                                         <span>Go to Recruiter's Portal</span>
                                                     </div>
@@ -222,7 +222,7 @@ export default function OrganizationsTable() {
                                                         if (e.defaultPrevented) return;
                                                         e.preventDefault();
                                                         setMenuOpen(false);
-                                                        const url = new URL("https://www.hellojia.ai/job-openings");
+                                                        const url = new URL(`${window.location.origin}/job-openings`);
                                                         url.searchParams.set("company", organization.name);
                                                         window.location.href = url.toString();
                                                     }}>

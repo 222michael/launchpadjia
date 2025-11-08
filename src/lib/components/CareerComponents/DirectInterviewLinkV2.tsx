@@ -71,8 +71,7 @@ export default function DirectInterviewLinkV2(props: { formData: any, setFormDat
 
   useEffect(() => {
       if (formData?.directInterviewLink) {
-        let dynamicLink = `${window.location.origin.includes("hirejia.ai") ? 
-          "https://www.hellojia.ai" : window.location.origin}${formData.directInterviewLink}`;
+        let dynamicLink = `${window.location.origin}${formData.directInterviewLink}`;
 
         setLink(dynamicLink);
       }

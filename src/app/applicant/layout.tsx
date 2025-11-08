@@ -33,7 +33,7 @@ export default function Layout({ children }) {
   ];
   // Check active link from the url
   useEffect(() => {
-    window.location.href = "https://www.hellojia.ai"
+    // Removed production redirect - stay on local
     
     if (pathname) {
       let pathSplit = pathname.split("/");

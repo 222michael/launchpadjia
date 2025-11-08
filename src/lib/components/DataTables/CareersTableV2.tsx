@@ -369,7 +369,7 @@ export default function CareersV2Table() {
                                 if (item.orgID === "682d3fc222462d03263b0881") {
                                     careerRedirection = "whitecloak";
                                 }
-                                navigator.clipboard.writeText(`https://www.hellojia.ai/${careerRedirection}/job-openings/${item._id}`);
+                                navigator.clipboard.writeText(`${window.location.origin}/${careerRedirection}/job-openings/${item._id}`);
                                 candidateActionToast(
                                   "Career Link Copied to Clipboard",
                                   1300,

@@ -53,11 +53,7 @@ export default function (props) {
       "Sucessfully Created Direct Link"
     );
 
-    let dynamicLink = `${
-      window.location.origin.includes("hirejia.ai")
-        ? "https://www.hellojia.ai"
-        : window.location.origin
-    }${directLink}`;
+    let dynamicLink = `${window.location.origin}${directLink}`;
     setLink(dynamicLink);
     copyTextToClipboard(dynamicLink);
   }

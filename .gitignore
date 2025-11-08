@@ -6,3 +6,16 @@ node_modules/
 !.env.example
 bun.lock
 next-env.d.ts
+
+# Sensitive files - DO NOT COMMIT
+firebase.txt
+guide.txt
+*firebase-adminsdk*.json
+*.pem
+*.key
+
+# Documentation (keep only essential)
+TICKET-*.md
+*-COMPLETE.md
+*-PROGRESS.md
+ISSUES-RESOLVED.md

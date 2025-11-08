@@ -12,7 +12,7 @@ export default function CareerLink(props: {career: any}) {
         if (career.orgID === "682d3fc222462d03263b0881") {
             careerRedirection = "whitecloak";
         }
-        setShareLink(`https://www.hellojia.ai/${careerRedirection}/job-openings/${career._id}`);
+        setShareLink(`${window.location.origin}/${careerRedirection}/job-openings/${career._id}`);
     }, [career]);
 
     return (
