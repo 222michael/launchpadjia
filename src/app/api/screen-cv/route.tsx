@@ -5,6 +5,7 @@ import { sendEmail } from "@/lib/Email";
 
 const openai = new OpenAI({
   apiKey: process.env.OPENAI_API_KEY,
+  baseURL: process.env.OPENAI_BASE_URL || "https://api.openai.com/v1",
 });
 
 export async function POST(request: Request) {
@@ -144,10 +145,9 @@ export async function POST(request: Request) {
 
   // console.log(screeningPrompt);
 
-  const completion = await openai.responses.create({
-    model: "o4-mini",
-    reasoning: { effort: "high" },
-    input: [
+  const completion = await openai.chat.completions.create({
+    model: process.env.OPENAI_MODEL || "gpt-4o-mini",
+    messages: [
       {
         role: "user",
         content: screeningPrompt,
@@ -155,7 +155,7 @@ export async function POST(request: Request) {
     ],
   });
 
-  let result: any = completion.output_text;
+  let result: any = completion.choices[0].message.content;
 
   try {
     result = result.replace("```json", "").replace("```", "");

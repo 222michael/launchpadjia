@@ -352,12 +352,25 @@ export default function CareersV2Table() {
                               padding: "10px 15px"
                           }}
                           >
+                            {item.status === "inactive" && (
+                              <div className="dropdown-item" onClick={(e) => {
+                                  if (e.defaultPrevented) return;
+                                  e.preventDefault();
+                                  setMenuOpen(false);
+                                  window.location.href = `/recruiter-dashboard/careers/edit-career/${item._id}`;
+                              }}>
+                                  <i className="la la-edit" style={{ marginRight: "8px" }}></i>
+                                  <span>Resume Draft</span>
+                              </div>
+                            )}
+
                             <div className="dropdown-item" onClick={(e) => {
                                 if (e.defaultPrevented) return;
                                 e.preventDefault();
                                 setMenuOpen(false);
                                 window.location.href = `/recruiter-dashboard/careers/manage/${item._id}?tab=edit`;
                             }}>
+                                <i className="la la-pen" style={{ marginRight: "8px" }}></i>
                                 <span>Edit Career</span>
                             </div>
 
@@ -376,6 +389,7 @@ export default function CareersV2Table() {
                                   <i className="la la-link mr-1 text-info"></i>
                                 );
                             }}>
+                                <i className="la la-link" style={{ marginRight: "8px" }}></i>
                                 <span>Copy Career Link</span>
                             </div>
 
@@ -387,6 +401,7 @@ export default function CareersV2Table() {
                                 setMenuOpen(false);
                                 deleteCareer(item._id);
                             }}>
+                                <i className="la la-trash" style={{ marginRight: "8px" }}></i>
                                 <span>Delete Career</span>
                             </div>
                             </div>

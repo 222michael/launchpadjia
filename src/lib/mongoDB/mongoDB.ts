@@ -20,10 +20,26 @@ if (!dbName) {
 
 export default async function connectMongoDB() {
   if (cachedClient && cachedDb) {
-    return { client: cachedClient, db: cachedDb };
+    // Check if connection is still alive
+    try {
+      await cachedClient.db().admin().ping();
+      return { client: cachedClient, db: cachedDb };
+    } catch (error) {
+      // Connection is dead, clear cache and reconnect
+      console.log("Cached connection is dead, reconnecting...");
+      cachedClient = null;
+      cachedDb = null;
+    }
   }
 
-  const client = await MongoClient.connect(uri, {});
+  const client = await MongoClient.connect(uri, {
+    serverSelectionTimeoutMS: 10000,
+    socketTimeoutMS: 45000,
+    maxPoolSize: 10,
+    minPoolSize: 2,
+    retryWrites: true,
+    retryReads: true,
+  });
 
   const db = client.db(dbName);
 

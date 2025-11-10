@@ -15,7 +15,16 @@ export async function POST(request: Request) {
 
     const { db } = await connectMongoDB();
 
-    const query: any = { _id: new ObjectId(id) };
+    let query: any;
+    
+    // Check if id is a valid MongoDB ObjectId (24 character hex string)
+    if (ObjectId.isValid(id) && id.length === 24) {
+      query = { _id: new ObjectId(id) };
+    } else {
+      // Otherwise, search by the custom id field
+      query = { id: id };
+    }
+    
     if (orgID) {
       query.orgID = orgID;
     }

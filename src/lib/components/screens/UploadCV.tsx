@@ -208,7 +208,7 @@ export default function () {
     axios({
       method: "POST",
       url: "/api/career-data",
-      data: { careerID: careerId },
+      data: { id: careerId },
     })
       .then((res) => {
         if (res.data && res.data.preScreeningQuestions) {
@@ -300,13 +300,13 @@ export default function () {
   }
 
   function handlePreScreeningSubmit() {
-    // Validate all required questions are answered
-    const unansweredRequired = preScreeningQuestions.filter(
-      (q) => q.required && !preScreeningAnswers[q._id]
+    // Validate all questions are answered
+    const unanswered = preScreeningQuestions.filter(
+      (q) => !preScreeningAnswers[q._id || q.id]
     );
 
-    if (unansweredRequired.length > 0) {
-      alert("Please answer all required questions.");
+    if (unanswered.length > 0) {
+      alert("Please answer all questions before continuing.");
       return;
     }
 
@@ -683,38 +683,38 @@ export default function () {
                       <div className={styles.detailsContainer}>
                         <span className={styles.questionText}>{question.question}</span>
                         
-                        {question.type === 'Short Answer' && (
+                        {(question.type === 'Short Answer' || question.type === 'short answer' || question.type === 'text') && (
                           <input
                             type="text"
                             className={styles.answerInput}
                             placeholder="Your answer..."
-                            value={preScreeningAnswers[question._id] || ''}
+                            value={preScreeningAnswers[question._id || question.id] || ''}
                             onChange={(e) => setPreScreeningAnswers({
                               ...preScreeningAnswers,
-                              [question._id]: e.target.value
+                              [question._id || question.id]: e.target.value
                             })}
                           />
                         )}
 
-                        {question.type === 'Long Answer' && (
+                        {(question.type === 'Long Answer' || question.type === 'long answer' || question.type === 'textarea') && (
                           <textarea
                             className={styles.answerTextarea}
                             placeholder="Your answer..."
-                            value={preScreeningAnswers[question._id] || ''}
+                            value={preScreeningAnswers[question._id || question.id] || ''}
                             onChange={(e) => setPreScreeningAnswers({
                               ...preScreeningAnswers,
-                              [question._id]: e.target.value
+                              [question._id || question.id]: e.target.value
                             })}
                           />
                         )}
 
-                        {question.type === 'Dropdown' && (
+                        {(question.type === 'Dropdown' || question.type === 'dropdown' || question.type === 'select') && (
                           <select
                             className={styles.answerSelect}
-                            value={preScreeningAnswers[question._id] || ''}
+                            value={preScreeningAnswers[question._id || question.id] || ''}
                             onChange={(e) => setPreScreeningAnswers({
                               ...preScreeningAnswers,
-                              [question._id]: e.target.value
+                              [question._id || question.id]: e.target.value
                             })}
                           >
                             <option value="">Select an option...</option>
@@ -724,39 +724,60 @@ export default function () {
                           </select>
                         )}
 
-                        {question.type === 'Range' && (
+                        {(question.type === 'Range' || question.type === 'range') && (
                           <div className={styles.rangeContainer}>
-                            <input
-                              type="range"
-                              min={question.min || 0}
-                              max={question.max || 10}
-                              value={preScreeningAnswers[question._id] || question.min || 0}
-                              onChange={(e) => setPreScreeningAnswers({
-                                ...preScreeningAnswers,
-                                [question._id]: e.target.value
-                              })}
-                            />
-                            <span className={styles.rangeValue}>
-                              {preScreeningAnswers[question._id] || question.min || 0}
-                            </span>
+                            <div style={{ display: 'flex', gap: '16px', alignItems: 'center' }}>
+                              <div style={{ flex: 1 }}>
+                                <label style={{ fontSize: '12px', color: '#6B7280', marginBottom: '4px', display: 'block' }}>Minimum Salary</label>
+                                <input
+                                  type="number"
+                                  placeholder="₱ 0"
+                                  className={styles.answerInput}
+                                  value={preScreeningAnswers[question._id || question.id]?.min || ''}
+                                  onChange={(e) => setPreScreeningAnswers({
+                                    ...preScreeningAnswers,
+                                    [question._id || question.id]: {
+                                      ...(preScreeningAnswers[question._id || question.id] || {}),
+                                      min: e.target.value
+                                    }
+                                  })}
+                                />
+                              </div>
+                              <div style={{ flex: 1 }}>
+                                <label style={{ fontSize: '12px', color: '#6B7280', marginBottom: '4px', display: 'block' }}>Maximum Salary</label>
+                                <input
+                                  type="number"
+                                  placeholder="₱ 0"
+                                  className={styles.answerInput}
+                                  value={preScreeningAnswers[question._id || question.id]?.max || ''}
+                                  onChange={(e) => setPreScreeningAnswers({
+                                    ...preScreeningAnswers,
+                                    [question._id || question.id]: {
+                                      ...(preScreeningAnswers[question._id || question.id] || {}),
+                                      max: e.target.value
+                                    }
+                                  })}
+                                />
+                              </div>
+                            </div>
                           </div>
                         )}
 
-                        {question.type === 'Checkboxes' && (
+                        {(question.type === 'Checkboxes' || question.type === 'checkboxes' || question.type === 'checkbox') && (
                           <div className={styles.checkboxContainer}>
                             {question.options?.map((option, idx) => (
                               <label key={idx} className={styles.checkboxLabel}>
                                 <input
                                   type="checkbox"
-                                  checked={(preScreeningAnswers[question._id] || []).includes(option)}
+                                  checked={(preScreeningAnswers[question._id || question.id] || []).includes(option)}
                                   onChange={(e) => {
-                                    const currentAnswers = preScreeningAnswers[question._id] || [];
+                                    const currentAnswers = preScreeningAnswers[question._id || question.id] || [];
                                     const newAnswers = e.target.checked
                                       ? [...currentAnswers, option]
                                       : currentAnswers.filter(a => a !== option);
                                     setPreScreeningAnswers({
                                       ...preScreeningAnswers,
-                                      [question._id]: newAnswers
+                                      [question._id || question.id]: newAnswers
                                     });
                                   }}
                                 />
@@ -771,7 +792,13 @@ export default function () {
                 ))
               )}
 
-              <button onClick={handlePreScreeningSubmit}>Continue</button>
+              <button 
+                onClick={handlePreScreeningSubmit}
+                disabled={preScreeningQuestions.length > 0 && preScreeningQuestions.some(q => !preScreeningAnswers[q._id || q.id])}
+                className={preScreeningQuestions.length > 0 && preScreeningQuestions.some(q => !preScreeningAnswers[q._id || q.id]) ? 'disabled' : ''}
+              >
+                Continue
+              </button>
             </div>
           )}
 

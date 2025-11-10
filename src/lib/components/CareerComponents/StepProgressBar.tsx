@@ -11,9 +11,10 @@ interface Step {
 
 interface StepProgressBarProps {
   currentStep: number;
+  onStepClick?: (step: number) => void;
 }
 
-export default function StepProgressBar({ currentStep }: StepProgressBarProps) {
+export default function StepProgressBar({ currentStep, onStepClick }: StepProgressBarProps) {
   const steps: Step[] = [
     {
       number: 1,
@@ -136,6 +137,12 @@ export default function StepProgressBar({ currentStep }: StepProgressBarProps) {
           {steps.map((step) => (
             <span
               key={`label-${step.number}`}
+              onClick={() => {
+                // Only allow clicking on completed steps or current step
+                if ((step.isCompleted || step.isActive) && onStepClick) {
+                  onStepClick(step.number);
+                }
+              }}
               style={{
                 flex: 1,
                 fontSize: "12px",
@@ -146,6 +153,17 @@ export default function StepProgressBar({ currentStep }: StepProgressBarProps) {
                 whiteSpace: "normal",
                 wordWrap: "break-word",
                 maxWidth: "200px",
+                cursor: (step.isCompleted || step.isActive) && onStepClick ? "pointer" : "default",
+                transition: "opacity 0.2s",
+                opacity: 1,
+              }}
+              onMouseEnter={(e) => {
+                if ((step.isCompleted || step.isActive) && onStepClick) {
+                  e.currentTarget.style.opacity = "0.7";
+                }
+              }}
+              onMouseLeave={(e) => {
+                e.currentTarget.style.opacity = "1";
               }}
             >
               {step.label}

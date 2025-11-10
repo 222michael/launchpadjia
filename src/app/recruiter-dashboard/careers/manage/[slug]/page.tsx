@@ -286,6 +286,11 @@ export default function ManageCareerPage() {
                     employmentType: response.data?.employmentType || "Full-time",
                     orgID: response.data?.orgID || "",
                     teamMembers: response.data?.teamMembers || [],
+                    preScreeningQuestions: response.data?.preScreeningQuestions || [],
+                    secretPrompt: response.data?.secretPrompt || "",
+                    aiInterviewSecretPrompt: response.data?.aiInterviewSecretPrompt || "",
+                    aiInterviewScreening: response.data?.aiInterviewScreening || "Good Fit and above",
+                    country: response.data?.country || "Philippines",
                 });
                 if (tab === "edit") {
                     setActiveTab("job-description");

@@ -119,6 +119,12 @@ export default function CareerForm({ career, formType, setShowEditModal }: { car
     const [showSaveModal, setShowSaveModal] = useState("");
     const [isSavingCareer, setIsSavingCareer] = useState(false);
     const savingCareerRef = useRef(false);
+    const [hasDraft, setHasDraft] = useState(false);
+    const [showDraftModal, setShowDraftModal] = useState(false);
+    const [isLoadingDraft, setIsLoadingDraft] = useState(true);
+    const [isSavingDraft, setIsSavingDraft] = useState(false);
+    const [generatingQuestionsForCategory, setGeneratingQuestionsForCategory] = useState<number | null>(null);
+    const [isGeneratingAllQuestions, setIsGeneratingAllQuestions] = useState(false);
 
     const isFormValid = () => {
         // For step 1, only validate basic career information
@@ -137,6 +143,245 @@ export default function CareerForm({ career, formType, setShowEditModal }: { car
         // For final save (step 4 - Review Career), validate everything including questions
         return jobTitle?.trim().length > 0 && description?.trim().length > 0 && questions.some((q) => q.questions.length > 0) && workSetup?.trim().length > 0;
     }
+
+    // Draft Management Functions
+    const saveDraft = async () => {
+        if (!orgID || !user?.email) return;
+        
+        setIsSavingDraft(true);
+        try {
+            const draftData = {
+                jobTitle,
+                description,
+                workSetup,
+                workSetupRemarks,
+                employmentType,
+                country,
+                province,
+                city,
+                salaryNegotiable,
+                minimumSalary,
+                maximumSalary,
+                selectedMembers,
+                preScreeningQuestions,
+                screeningSetting,
+                requireVideo,
+                secretPrompt,
+                aiInterviewSecretPrompt,
+                aiInterviewScreening,
+                questions,
+            };
+
+            if (formType === "edit" && career?._id) {
+                // For edit mode, update the career directly with current step
+                await axios.post("/api/update-career", {
+                    _id: career._id,
+                    ...draftData,
+                    currentStep,
+                    updatedAt: Date.now(),
+                });
+            } else if (formType === "add") {
+                // For add mode, use draft system
+                await axios.post("/api/save-career-draft", {
+                    orgID,
+                    userEmail: user.email,
+                    draftData,
+                    currentStep,
+                });
+            }
+        } catch (error) {
+            console.error("Error saving draft:", error);
+        } finally {
+            setIsSavingDraft(false);
+        }
+    };
+
+    const loadDraft = async () => {
+        if (!orgID || !user?.email || formType !== "add") {
+            setIsLoadingDraft(false);
+            return;
+        }
+
+        try {
+            const response = await axios.get("/api/save-career-draft", {
+                params: { orgID, userEmail: user.email },
+            });
+
+            if (response.data.draft) {
+                setHasDraft(true);
+                setShowDraftModal(true);
+            }
+        } catch (error) {
+            console.error("Error loading draft:", error);
+        } finally {
+            setIsLoadingDraft(false);
+        }
+    };
+
+    const resumeFromDraft = async () => {
+        try {
+            const response = await axios.get("/api/save-career-draft", {
+                params: { orgID, userEmail: user.email },
+            });
+
+            if (response.data.draft) {
+                const { draftData, currentStep: savedStep } = response.data.draft;
+                
+                // Restore all form data
+                setJobTitle(draftData.jobTitle || "");
+                setDescription(draftData.description || "");
+                setWorkSetup(draftData.workSetup || "");
+                setWorkSetupRemarks(draftData.workSetupRemarks || "");
+                setEmploymentType(draftData.employmentType || "Full-Time");
+                setCountry(draftData.country || "Philippines");
+                setProvince(draftData.province || "");
+                setCity(draftData.city || "");
+                setSalaryNegotiable(draftData.salaryNegotiable ?? true);
+                setMinimumSalary(draftData.minimumSalary || "");
+                setMaximumSalary(draftData.maximumSalary || "");
+                setSelectedMembers(draftData.selectedMembers || []);
+                setPreScreeningQuestions(draftData.preScreeningQuestions || []);
+                setScreeningSetting(draftData.screeningSetting || "Good Fit and above");
+                setRequireVideo(draftData.requireVideo ?? true);
+                setSecretPrompt(draftData.secretPrompt || "");
+                setAiInterviewSecretPrompt(draftData.aiInterviewSecretPrompt || "");
+                setAiInterviewScreening(draftData.aiInterviewScreening || "Good Fit and above");
+                setQuestions(draftData.questions || questions);
+                setCurrentStep(savedStep || 1);
+
+                candidateActionToast("Draft loaded successfully", 1500, <i className="la la-check-circle" style={{ color: "#039855", fontSize: 32 }}></i>);
+            }
+        } catch (error) {
+            console.error("Error resuming draft:", error);
+            errorToast("Failed to load draft", 1500);
+        } finally {
+            setShowDraftModal(false);
+        }
+    };
+
+    const deleteDraft = async () => {
+        if (!orgID || !user?.email) return;
+
+        try {
+            await axios.delete("/api/save-career-draft", {
+                params: { orgID, userEmail: user.email },
+            });
+        } catch (error) {
+            console.error("Error deleting draft:", error);
+        }
+    };
+
+    const generateQuestionsForCategory = async (categoryId: number, categoryName: string) => {
+        if (!jobTitle || !description) {
+            errorToast("Please fill in job title and description first", 1500);
+            return;
+        }
+
+        setGeneratingQuestionsForCategory(categoryId);
+        try {
+            const categoryIndex = questions.findIndex((q) => q.id === categoryId);
+            const existingQuestions = questions[categoryIndex]?.questions || [];
+
+            const response = await axios.post("/api/generate-interview-questions", {
+                jobTitle,
+                description,
+                category: categoryName,
+                existingQuestions,
+            });
+
+            if (response.data.questions && response.data.questions.length > 0) {
+                const updated = [...questions];
+                updated[categoryIndex].questions = [
+                    ...existingQuestions,
+                    ...response.data.questions,
+                ];
+                setQuestions(updated);
+                candidateActionToast(
+                    `Generated ${response.data.questions.length} questions for ${categoryName}`,
+                    1500,
+                    <i className="la la-check-circle" style={{ color: "#039855", fontSize: 32 }}></i>
+                );
+            }
+        } catch (error) {
+            console.error("Error generating questions:", error);
+            errorToast("Failed to generate questions", 1500);
+        } finally {
+            setGeneratingQuestionsForCategory(null);
+        }
+    };
+
+    const generateAllQuestions = async () => {
+        if (!jobTitle || !description) {
+            errorToast("Please fill in job title and description first", 1500);
+            return;
+        }
+
+        setIsGeneratingAllQuestions(true);
+        try {
+            const promises = questions.map(async (category) => {
+                const existingQuestions = category.questions || [];
+                const response = await axios.post("/api/generate-interview-questions", {
+                    jobTitle,
+                    description,
+                    category: category.category,
+                    existingQuestions,
+                });
+                return {
+                    categoryId: category.id,
+                    questions: response.data.questions || [],
+                };
+            });
+
+            const results = await Promise.all(promises);
+            const updated = [...questions];
+            
+            results.forEach((result) => {
+                const categoryIndex = updated.findIndex((q) => q.id === result.categoryId);
+                if (categoryIndex !== -1) {
+                    updated[categoryIndex].questions = [
+                        ...(updated[categoryIndex].questions || []),
+                        ...result.questions,
+                    ];
+                }
+            });
+
+            setQuestions(updated);
+            const totalGenerated = results.reduce((sum, r) => sum + r.questions.length, 0);
+            candidateActionToast(
+                `Generated ${totalGenerated} questions across all categories`,
+                1500,
+                <i className="la la-check-circle" style={{ color: "#039855", fontSize: 32 }}></i>
+            );
+        } catch (error) {
+            console.error("Error generating all questions:", error);
+            errorToast("Failed to generate questions", 1500);
+        } finally {
+            setIsGeneratingAllQuestions(false);
+        }
+    };
+
+    // Load draft on mount
+    useEffect(() => {
+        if (formType === "add" && orgID && user?.email) {
+            loadDraft();
+        } else {
+            setIsLoadingDraft(false);
+        }
+    }, [formType, orgID, user?.email]);
+
+    // Auto-save draft when step changes (for both add and edit modes)
+    useEffect(() => {
+        if ((formType === "add" || formType === "edit") && !isLoadingDraft && currentStep > 1 && orgID && user?.email) {
+            saveDraft();
+        }
+    }, [currentStep, formType, isLoadingDraft, orgID, user?.email]);
+
+    // Load current step from career data when editing
+    useEffect(() => {
+        if (formType === "edit" && career?.currentStep) {
+            setCurrentStep(career.currentStep);
+        }
+    }, [formType, career]);
 
     const updateCareer = async (status: string) => {
         if (Number(minimumSalary) && Number(maximumSalary) && Number(minimumSalary) > Number(maximumSalary)) {
@@ -251,6 +496,9 @@ export default function CareerForm({ career, formType, setShowEditModal }: { car
             console.log("Sending career data:", career);
             const response = await axios.post("/api/add-career", career);
             if (response.status === 200) {
+            // Delete draft after successful save
+            await deleteDraft();
+            
             candidateActionToast(
                 <div style={{ display: "flex", flexDirection: "row", alignItems: "center", gap: 8, marginLeft: 8 }}>
                     <span style={{ fontSize: 14, fontWeight: 700, color: "#181D27" }}>Career added {status === "active" ? "and published" : ""}</span>
@@ -313,8 +561,8 @@ export default function CareerForm({ career, formType, setShowEditModal }: { car
 
     return (
         <div className="col">
-        {formType === "add" ? (<div style={{ marginBottom: "35px", display: "flex", flexDirection: "row", justifyContent: "space-between", alignItems: "center", width: "100%" }}>
-              <h1 style={{ fontSize: "24px", fontWeight: 550, color: "#111827" }}>Add new career</h1>
+        {(formType === "add" || formType === "edit") ? (<div style={{ marginBottom: "35px", display: "flex", flexDirection: "row", justifyContent: "space-between", alignItems: "center", width: "100%" }}>
+              <h1 style={{ fontSize: "24px", fontWeight: 550, color: "#111827" }}>{formType === "edit" ? "Edit career" : "Add new career"}</h1>
               <div style={{ display: "flex", flexDirection: "row", alignItems: "center", gap: "10px" }}>
                   <button
                   disabled={!isFormValid() || isSavingCareer}
@@ -370,8 +618,13 @@ export default function CareerForm({ career, formType, setShowEditModal }: { car
        </div>
         )}
         
-        {/* Step Progress Bar - Only show for "add" form type */}
-        {formType === "add" && <StepProgressBar currentStep={currentStep} />}
+        {/* Step Progress Bar - Show for both "add" and "edit" form types */}
+        {(formType === "add" || formType === "edit") && (
+          <StepProgressBar 
+            currentStep={currentStep} 
+            onStepClick={(step) => setCurrentStep(step)} 
+          />
+        )}
         
         <div style={{ display: "flex", flexDirection: "row", justifyContent: "space-between", width: "100%", gap: 16, alignItems: "flex-start", marginTop: 16 }}>
         <div style={{ width: "75%", display: "flex", flexDirection: "column", gap: 24 }}>
@@ -1941,22 +2194,33 @@ export default function CareerForm({ career, formType, setShowEditModal }: { car
                 </div>
                 <button
                   type="button"
+                  onClick={generateAllQuestions}
+                  disabled={isGeneratingAllQuestions || !jobTitle || !description}
                   style={{
                     display: "flex",
                     alignItems: "center",
                     gap: "8px",
                     padding: "10px 20px",
-                    backgroundColor: "#111827",
+                    backgroundColor: isGeneratingAllQuestions || !jobTitle || !description ? "#D1D5DB" : "#111827",
                     color: "#FFFFFF",
                     border: "none",
                     borderRadius: "8px",
                     fontSize: "14px",
                     fontWeight: 500,
-                    cursor: "pointer",
+                    cursor: isGeneratingAllQuestions || !jobTitle || !description ? "not-allowed" : "pointer",
                   }}
                 >
-                  <i className="la la-sparkles" style={{ fontSize: 16 }}></i>
-                  Generate all questions
+                  {isGeneratingAllQuestions ? (
+                    <>
+                      <i className="la la-spinner la-spin" style={{ fontSize: 16 }}></i>
+                      Generating...
+                    </>
+                  ) : (
+                    <>
+                      <i className="la la-sparkles" style={{ fontSize: 16 }}></i>
+                      Generate all questions
+                    </>
+                  )}
                 </button>
               </div>
 
@@ -2121,22 +2385,33 @@ export default function CareerForm({ career, formType, setShowEditModal }: { car
                     <div style={{ display: "flex", gap: "12px", alignItems: "center" }}>
                       <button
                         type="button"
+                        onClick={() => generateQuestionsForCategory(category.id, category.category)}
+                        disabled={generatingQuestionsForCategory === category.id || !jobTitle || !description}
                         style={{
                           display: "flex",
                           alignItems: "center",
                           gap: "8px",
                           padding: "10px 20px",
-                          backgroundColor: "#111827",
+                          backgroundColor: generatingQuestionsForCategory === category.id || !jobTitle || !description ? "#D1D5DB" : "#111827",
                           color: "#FFFFFF",
                           border: "none",
                           borderRadius: "8px",
                           fontSize: "14px",
                           fontWeight: 500,
-                          cursor: "pointer",
+                          cursor: generatingQuestionsForCategory === category.id || !jobTitle || !description ? "not-allowed" : "pointer",
                         }}
                       >
-                        <i className="la la-sparkles" style={{ fontSize: 16 }}></i>
-                        Generate questions
+                        {generatingQuestionsForCategory === category.id ? (
+                          <>
+                            <i className="la la-spinner la-spin" style={{ fontSize: 16 }}></i>
+                            Generating...
+                          </>
+                        ) : (
+                          <>
+                            <i className="la la-sparkles" style={{ fontSize: 16 }}></i>
+                            Generate questions
+                          </>
+                        )}
                       </button>
 
                       <button
@@ -2461,6 +2736,90 @@ export default function CareerForm({ career, formType, setShowEditModal }: { car
         )}
     {isSavingCareer && (
         <FullScreenLoadingAnimation title={formType === "add" ? "Saving career..." : "Updating career..."} subtext={`Please wait while we are ${formType === "add" ? "saving" : "updating"} the career`} />
+    )}
+    {showDraftModal && (
+        <div style={{
+            position: "fixed",
+            top: 0,
+            left: 0,
+            right: 0,
+            bottom: 0,
+            backgroundColor: "rgba(0, 0, 0, 0.5)",
+            display: "flex",
+            alignItems: "center",
+            justifyContent: "center",
+            zIndex: 9999,
+        }}>
+            <div style={{
+                backgroundColor: "#FFFFFF",
+                borderRadius: "12px",
+                padding: "32px",
+                maxWidth: "500px",
+                width: "90%",
+                boxShadow: "0 20px 25px -5px rgba(0, 0, 0, 0.1), 0 10px 10px -5px rgba(0, 0, 0, 0.04)",
+            }}>
+                <div style={{ marginBottom: "24px", textAlign: "center" }}>
+                    <div style={{
+                        width: "64px",
+                        height: "64px",
+                        borderRadius: "50%",
+                        backgroundColor: "#EEF2FF",
+                        display: "flex",
+                        alignItems: "center",
+                        justifyContent: "center",
+                        margin: "0 auto 16px",
+                    }}>
+                        <i className="la la-file-alt" style={{ fontSize: 32, color: "#6366F1" }}></i>
+                    </div>
+                    <h2 style={{ fontSize: "20px", fontWeight: 600, color: "#111827", marginBottom: "8px" }}>
+                        Resume from Draft?
+                    </h2>
+                    <p style={{ fontSize: "14px", color: "#6B7280", margin: 0 }}>
+                        We found a saved draft of your career posting. Would you like to continue where you left off?
+                    </p>
+                </div>
+                <div style={{ display: "flex", gap: "12px" }}>
+                    <button
+                        onClick={() => {
+                            setShowDraftModal(false);
+                            deleteDraft();
+                        }}
+                        style={{
+                            flex: 1,
+                            padding: "10px 16px",
+                            backgroundColor: "#FFFFFF",
+                            color: "#374151",
+                            border: "1px solid #D1D5DB",
+                            borderRadius: "8px",
+                            fontSize: "14px",
+                            fontWeight: 600,
+                            cursor: "pointer",
+                        }}
+                    >
+                        Start Fresh
+                    </button>
+                    <button
+                        onClick={resumeFromDraft}
+                        style={{
+                            flex: 1,
+                            padding: "10px 16px",
+                            backgroundColor: "#6366F1",
+                            color: "#FFFFFF",
+                            border: "none",
+                            borderRadius: "8px",
+                            fontSize: "14px",
+                            fontWeight: 600,
+                            cursor: "pointer",
+                        }}
+                    >
+                        Resume Draft
+                    </button>
+                </div>
+            </div>
+        </div>
+    )}
+    {isLoadingDraft && (
+        <FullScreenLoadingAnimation title="Loading..." subtext="Checking for saved drafts..." />
     )}
     </div>
     )

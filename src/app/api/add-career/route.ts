@@ -4,42 +4,71 @@ import connectMongoDB from "@/lib/mongoDB/mongoDB";
 export async function POST(request: Request) {
   try {
     const requestData = await request.json();
-    const { jobTitle, description, orgID } = requestData;
+    const { jobTitle, orgID, careerId, isDraft } = requestData;
 
-    // Validate required fields
-    if (!jobTitle || !description || !orgID) {
+    // For drafts, only orgID is required
+    // For published careers, jobTitle and description are required
+    if (!orgID) {
       return NextResponse.json(
-        { error: "Job title, description, and organization ID are required", message: "Job title, description, and organization ID are required" },
+        { error: "Organization ID is required" },
         { status: 400 }
       );
     }
 
     const { db } = await connectMongoDB();
 
+    // If careerId exists, update existing career (auto-save)
+    if (careerId) {
+      const updateData = {
+        ...requestData,
+        updatedAt: Date.now(),
+      };
+      
+      // Remove careerId from update data
+      delete updateData.careerId;
+      delete updateData.isDraft;
+
+      await db.collection("careers").updateOne(
+        { id: careerId },
+        { $set: updateData }
+      );
+
+      return NextResponse.json({
+        message: "Career updated successfully",
+        careerId: careerId,
+      });
+    }
+
+    // Create new career
     // Generate a unique ID for the career
-    const careerId = `career_${Date.now()}_${Math.random().toString(36).substr(2, 9)}`;
+    const newCareerId = `career_${Date.now()}_${Math.random().toString(36).substr(2, 9)}`;
 
     const career = {
       ...requestData,
-      id: careerId, // Add id field for lookups
-      status: requestData.status || "active", // Default to active if not provided
+      id: newCareerId, // Add id field for lookups
+      status: isDraft ? "inactive" : (requestData.status || "active"),
       createdAt: Date.now(),
       updatedAt: Date.now(),
     };
 
+    // Remove helper fields
+    delete career.careerId;
+    delete career.isDraft;
+
     const result = await db.collection("careers").insertOne(career);
 
     return NextResponse.json({
-      message: "Career added successfully",
+      message: "Career created successfully",
+      careerId: newCareerId,
       career: {
         ...career,
         _id: result.insertedId,
       },
     });
   } catch (error) {
-    console.error("Error adding career:", error);
+    console.error("Error saving career:", error);
     return NextResponse.json(
-      { error: "Failed to add career", message: "Failed to add career" },
+      { error: "Failed to save career" },
       { status: 500 }
     );
   }

@@ -51,11 +51,11 @@ export async function POST(req: NextRequest) {
     `;
   const openai = new OpenAI({
     apiKey: process.env.OPENAI_API_KEY,
+    baseURL: process.env.OPENAI_BASE_URL || "https://api.openai.com/v1",
   });
-  const completion = await openai.responses.create({
-    model: "o4-mini",
-    reasoning: { effort: "high" },
-    input: [
+  const completion = await openai.chat.completions.create({
+    model: process.env.OPENAI_MODEL || "gpt-4o-mini",
+    messages: [
       {
         role: "user",
         content: corePrompt,
@@ -64,6 +64,6 @@ export async function POST(req: NextRequest) {
   });
 
   return NextResponse.json({
-    result: completion.output_text,
+    result: completion.choices[0].message.content,
   });
 }
