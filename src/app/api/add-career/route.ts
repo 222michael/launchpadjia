@@ -16,8 +16,13 @@ export async function POST(request: Request) {
 
     const { db } = await connectMongoDB();
 
+    // Generate a unique ID for the career
+    const careerId = `career_${Date.now()}_${Math.random().toString(36).substr(2, 9)}`;
+
     const career = {
       ...requestData,
+      id: careerId, // Add id field for lookups
+      status: requestData.status || "active", // Default to active if not provided
       createdAt: Date.now(),
       updatedAt: Date.now(),
     };
