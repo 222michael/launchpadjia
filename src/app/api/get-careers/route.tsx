@@ -41,6 +41,18 @@ export async function GET(req: Request) {
         .collection("careers")
         .aggregate([
             { $match: filter },
+            // Add id field if it doesn't exist (use _id as string)
+            {
+                $addFields: {
+                    id: {
+                        $cond: {
+                            if: { $ifNull: ["$id", false] },
+                            then: "$id",
+                            else: { $toString: "$_id" }
+                        }
+                    }
+                }
+            },
             { 
                 $lookup: {
                     from: "interviews",
@@ -52,7 +64,10 @@ export async function GET(req: Request) {
             { $unwind: { path: "$interviews", preserveNullAndEmptyArrays: true } },
             { 
                 $match: {
-                    "interviews.currentStep": { $ne: "Applied" }
+                    $or: [
+                        { "interviews.currentStep": { $ne: "Applied" } },
+                        { "interviews": null }
+                    ]
                 },
             },
             { 
