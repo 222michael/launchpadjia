@@ -7,6 +7,7 @@ import { useAppContext } from "../../context/AppContext";
 import DirectInterviewLinkV2 from "./DirectInterviewLinkV2";
 import CareerForm from "./CareerForm";
 import CareerLink from "./CareerLink";
+import TeamAccessSection from "./TeamAccessSection";
 
 export default function JobDescription({ formData, setFormData, editModal, isEditing, setIsEditing, handleCancelEdit }: { formData: any, setFormData: (formData: any) => void, editModal: boolean, isEditing: boolean, setIsEditing: (isEditing: boolean) => void, handleCancelEdit: () => void }) {
     const { user } = useAppContext();
@@ -126,186 +127,483 @@ export default function JobDescription({ formData, setFormData, editModal, isEdi
       }
 
     return (
-        <div style={{ display: "flex", flexDirection: "column", alignItems: "flex-end", gap: 16 }}>
-          <button style={{ display: "flex", alignItems: "center", gap: 8, background: "#fff", border: "1px solid #D5D7DA", padding: "8px 16px", borderRadius: "60px", cursor: "pointer", whiteSpace: "nowrap" }} onClick={handleEdit}>
-              <i className="la la-edit" style={{ marginRight: 8 }}></i>
-              Edit details
-          </button>
+        <div style={{ display: "flex", flexDirection: "column", gap: 16 }}>
             <div className="thread-set">
                 <div className="left-thread">
-                    <div className="layered-card-outer">
-                        <div className="layered-card-middle">
-                        <div style={{ display: "flex", flexDirection: "row", alignItems: "center", justifyContent: "flex-start", width: "100%", gap: 8 }}>
-                      <div style={{ width: 32, height: 32, display: "flex", justifyContent: "center", alignItems: "center", gap: 8, background: "#181D27", borderRadius: "60px" }}>
-                      <i className="la la-suitcase" style={{ fontSize: 20, color: "#FFFFFF"}} /> 
-                      </div>
-                      <span style={{ fontSize: 16, color: "#181D27", fontWeight: 700 }}>Career Information</span>
-                    </div>
-                        <div className="layered-card-content">
-                            {isEditing ? <textarea className="form-control" placeholder="Job Description" value={formData.description} onChange={(e) => setFormData({ ...formData, description: e.target.value })} /> 
-                            : <p style={{ whiteSpace: 'pre-wrap' }} dangerouslySetInnerHTML={{ __html: formData.description }} />}
-                        </div>
-                        </div>
-                    </div>
-                    {!isEditing ? 
-                    <div className="layered-card-outer">
-                        <div className="layered-card-middle">
-                        <div style={{ display: "flex", flexDirection: "row", alignItems: "center", justifyContent: "flex-start", width: "100%", gap: 8 }}>
-                          <div style={{ width: 32, height: 32, display: "flex", justifyContent: "center", alignItems: "center", gap: 8, background: "#181D27", borderRadius: "60px" }}>
-                          <i className="la la-comment-alt" style={{ fontSize: 20, color: "#FFFFFF"}} /> 
-                          </div>
-                          <span style={{fontSize: 16, color: "#181D27", fontWeight: 700}}>
-                            Interview Questions 
-                          </span>
-                          <div style={{ borderRadius: "50%", width: 30, height: 22, border: "1px solid #D5D9EB", display: "flex", alignItems: "center", justifyContent: "center", fontSize: 14, backgroundColor: "#F8F9FC", color: "#181D27", fontWeight: 700 }}>
-                            {formData.questions.reduce((acc, group) => acc + group.questions.length, 0)}
-                          </div>
-                        </div>
-                    
-                    <div className="layered-card-content">
-                        {formData.questions?.length > 0 && formData.questions?.map((questionGroup: any, index: number) => (
-                            <div key={index}>
-                                <h4>{questionGroup.category}</h4>
-                                {questionGroup?.questions?.length > 0 && questionGroup?.questions?.map((question: any, index: number) => (
-                                    <ul key={index}>
-                                        <li>{question.question}</li>
-                                    </ul>
-                                ))}
+                    <div style={{ 
+                        backgroundColor: "#F8F9FC", 
+                        borderRadius: "12px", 
+                        padding: "20px",
+                        display: "flex",
+                        flexDirection: "column",
+                        gap: "16px"
+                    }}>
+                        {/* Header */}
+                        <div style={{ display: "flex", flexDirection: "row", alignItems: "center", justifyContent: "space-between", width: "100%" }}>
+                            <div style={{ display: "flex", flexDirection: "row", alignItems: "center", gap: 8 }}>
+                                <i className="la la-angle-down" style={{ fontSize: 20, color: "#717680" }} />
+                                <h3 style={{ 
+                                    fontSize: "18px", 
+                                    fontWeight: 700, 
+                                    color: "#181D27",
+                                    margin: 0
+                                }}>
+                                    Career Details & Team Access
+                                </h3>
                             </div>
-                        ))}
-                    </div>
-                    </div>
-                    </div> : <InterviewQuestionGeneratorV2 questions={formData.questions} setQuestions={(questions) => setFormData({ ...formData, questions: questions })} jobTitle={formData.jobTitle} description={formData.description} />}
-                </div>
+                            <button 
+                                style={{ 
+                                    background: "#FFFFFF", 
+                                    border: "1px solid #E9EAEB",
+                                    borderRadius: "50%",
+                                    width: "40px",
+                                    height: "40px",
+                                    display: "flex",
+                                    alignItems: "center",
+                                    justifyContent: "center",
+                                    cursor: "pointer",
+                                    transition: "all 0.2s"
+                                }}
+                                onClick={handleEdit}
+                                onMouseOver={(e) => e.currentTarget.style.background = "#F8F9FC"}
+                                onMouseOut={(e) => e.currentTarget.style.background = "#FFFFFF"}
+                            >
+                                <i className="la la-pen" style={{ fontSize: 16, color: "#535862" }} />
+                            </button>
+                        </div>
 
-                <div className="right-thread">
-                    <div className="layered-card-outer">
-                        <div className="layered-card-middle">
-                        <div style={{ display: "flex", flexDirection: "row", alignItems: "center", justifyContent: "flex-start", width: "100%", gap: 8 }}>
-                      <div style={{ width: 32, height: 32, display: "flex", justifyContent: "center", alignItems: "center", gap: 8, background: "#181D27", borderRadius: "60px" }}>
-                      <i className="la la-ellipsis-h" style={{ fontSize: 20, color: "#FFFFFF"}} /> 
-                      </div>
-                      <span style={{ fontSize: 16, color: "#181D27", fontWeight: 700 }}>Additional Details</span>
-                      </div>
-                        
-                        <div className="layered-card-content">
-                            <div style={{ display: "flex",flexDirection: "row", justifyContent: "space-between", alignItems: "center", width: "100%"}}>
-                                <strong>Employment Type:</strong> 
-                                <span>{formData.employmentType || "Full-time"}</span>
-                            </div>
-                            <div style={{ display: "flex",flexDirection: "row", justifyContent: "space-between", alignItems: "center", width: "100%"}}>
-                                <strong>Work Arrangement:</strong> 
-                                <span>{formData.workSetup || "-"}</span>
-                            </div>
-                            <div style={{ display: "flex",flexDirection: "row", justifyContent: "space-between", alignItems: "center", width: "100%"}}>
-                                <strong>Work Arrangement Remarks:</strong> 
-                                <span>{formData.workSetupRemarks || "-"}</span>
-                            </div>
-                            <div style={{ display: "flex",flexDirection: "row", justifyContent: "space-between", alignItems: "center", width: "100%"}}>
-                                <strong>Salary:</strong> 
-                                <span>{formData.salaryNegotiable ? "Negotiable" : "Fixed"}</span>
-                            </div>
-                            <div style={{ display: "flex",flexDirection: "row", justifyContent: "space-between", alignItems: "center", width: "100%"}}>
-                                <strong>Minimum Salary:</strong> 
-                                <span>{formData.minimumSalary || "-"}</span>
-                            </div>
-                            <div style={{ display: "flex",flexDirection: "row", justifyContent: "space-between", alignItems: "center", width: "100%"}}>
-                                <strong>Maximum Salary:</strong> 
-                                <span>{formData.maximumSalary || "-"}</span>
-                            </div>
-                            <div style={{ height: "1px", width: "100%", background: "#E9EAEB", margin: "16px 0" }}></div>
-                            <div style={{ display: "flex",flexDirection: "row", justifyContent: "space-between", alignItems: "center", width: "100%"}}>
-                                <strong>Country:</strong> 
-                                <span>Philippines </span>
-                            </div>
-                            <div style={{ display: "flex",flexDirection: "row", justifyContent: "space-between", alignItems: "center", width: "100%"}}>
-                                <strong>State/Province:</strong> 
-                                <span>{formData.province || "-"}</span>
-                            </div>
-                            <div style={{ display: "flex",flexDirection: "row", justifyContent: "space-between", alignItems: "center", width: "100%"}}>
-                                <strong>City:</strong> 
-                                <span>{formData.location || "-"}</span>
-                            </div>
-                            <div style={{ height: "1px", width: "100%", background: "#E9EAEB", margin: "16px 0" }}></div>
-                            <div style={{ display: "flex",flexDirection: "row", justifyContent: "space-between", alignItems: "center", width: "100%"}}>
-                                <strong>Screening Setting:</strong> 
-                                {isEditing ? <ScreeningSettingButton screeningSetting={formData.screeningSetting} onSelectSetting={(setting) => setFormData({ ...formData, screeningSetting: setting })} /> : 
-                                <span style={{ textTransform: "capitalize" }}>{formData.screeningSetting}</span>}
-                            </div>
-                            <div style={{ display: "flex",flexDirection: "row", justifyContent: "space-between", alignItems: "center", width: "100%"}}>
-                                <strong>Require Video:</strong> 
-                                {isEditing ? <button
-                                    className={`button-primary ${formData.requireVideo ? "" : "negative"}`}
-                                    onClick={() => {
-                                    setFormData({ ...formData, requireVideo: !formData.requireVideo });
-                                    }}
-                                >
-                                <i
-                                className={`la ${
-                                    formData.requireVideo ? "la-video" : "la-video-slash"
-                                }`}
-                                ></i>{" "}
-                                {formData.requireVideo ? "On" : "Off"}
-                            </button> :
-                                <span>
-                               {formData.requireVideo ? "Yes" : "No"}</span>}
-                            </div>
+                        {/* Content */}
+                        <div style={{ 
+                            display: "flex", 
+                            flexDirection: "column", 
+                            gap: "20px",
+                            backgroundColor: "#FFFFFF",
+                            borderRadius: "8px",
+                            padding: "16px"
+                        }}>
+                                {/* Job Title */}
+                                <div>
+                                    <label style={{ fontSize: 14, color: "#6B7280", fontWeight: 500, display: "block", marginBottom: "8px" }}>
+                                        Job Title
+                                    </label>
+                                    <div style={{ fontSize: 16, color: "#181D27", fontWeight: 500 }}>
+                                        {formData.jobTitle || "-"}
+                                    </div>
+                                </div>
 
-                            <div style={{ height: "1px", width: "100%", background: "#E9EAEB", margin: "16px 0" }}></div>
-                            <div style={{ display: "flex",flexDirection: "row", justifyContent: "space-between", alignItems: "center", width: "100%"}}>
-                                <strong>Created By:</strong> 
-                                {formData.createdBy && <div style={{ display: "flex", flexDirection: "row", alignItems: "center", gap: 8 }}>
-                                  <img src={formData.createdBy.image} alt="created by" style={{ width: 32, height: 32, borderRadius: "50%" }} />
-                                  <div style={{ display: "flex", flexDirection: "column", alignItems: "flex-start", gap: 4 }}>
-                                    <span style={{ fontSize: 14, fontWeight: 600, color: "#181D27" }}>{formData.createdBy.name}</span>
-                                    <span style={{ fontSize: 12, color: "#717680" }}> on {formData.createdAt ? new Date(formData.createdAt).toLocaleDateString("en-US", { year: "numeric", month: "long", day: "numeric" }) : "-"}</span>
-                                  </div>
-                                </div>}
-                            </div>
+                                {/* Employment Type and Work Arrangement */}
+                                <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: "20px" }}>
+                                    <div>
+                                        <label style={{ fontSize: 14, color: "#6B7280", fontWeight: 500, display: "block", marginBottom: "8px" }}>
+                                            Employment Type
+                                        </label>
+                                        <div style={{ fontSize: 16, color: "#181D27", fontWeight: 500 }}>
+                                            {formData.employmentType || "-"}
+                                        </div>
+                                    </div>
+                                    <div>
+                                        <label style={{ fontSize: 14, color: "#6B7280", fontWeight: 500, display: "block", marginBottom: "8px" }}>
+                                            Work Arrangement
+                                        </label>
+                                        <div style={{ fontSize: 16, color: "#181D27", fontWeight: 500 }}>
+                                            {formData.workSetup || "-"}
+                                        </div>
+                                    </div>
+                                </div>
 
-                            <div style={{ display: "flex",flexDirection: "row", justifyContent: "space-between", alignItems: "center", width: "100%"}}>
-                                <strong>Last Updated By:</strong> 
-                                {formData.lastEditedBy && <div style={{ display: "flex", flexDirection: "row", alignItems: "center", gap: 8 }}>
-                                  <img src={formData.lastEditedBy.image} alt="created by" style={{ width: 32, height: 32, borderRadius: "50%" }} />
-                                  <div style={{ display: "flex", flexDirection: "column", alignItems: "flex-start", gap: 4 }}>
-                                    <span style={{ fontSize: 14, fontWeight: 600, color: "#181D27" }}>{formData.lastEditedBy.name}</span>
-                                    <span style={{ fontSize: 12, color: "#717680" }}> on {formData.updatedAt ? new Date(formData.updatedAt).toLocaleDateString("en-US", { year: "numeric", month: "long", day: "numeric" }) : "-"}</span>
-                                  </div>
-                                </div>}
+                                {/* Country, State/Province, City */}
+                                <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr 1fr", gap: "20px" }}>
+                                    <div>
+                                        <label style={{ fontSize: 14, color: "#6B7280", fontWeight: 500, display: "block", marginBottom: "8px" }}>
+                                            Country
+                                        </label>
+                                        <div style={{ fontSize: 16, color: "#181D27", fontWeight: 500 }}>
+                                            {formData.country || "Philippines"}
+                                        </div>
+                                    </div>
+                                    <div>
+                                        <label style={{ fontSize: 14, color: "#6B7280", fontWeight: 500, display: "block", marginBottom: "8px" }}>
+                                            State / Province
+                                        </label>
+                                        <div style={{ fontSize: 16, color: "#181D27", fontWeight: 500 }}>
+                                            {formData.province || "-"}
+                                        </div>
+                                    </div>
+                                    <div>
+                                        <label style={{ fontSize: 14, color: "#6B7280", fontWeight: 500, display: "block", marginBottom: "8px" }}>
+                                            City
+                                        </label>
+                                        <div style={{ fontSize: 16, color: "#181D27", fontWeight: 500 }}>
+                                            {formData.location || "-"}
+                                        </div>
+                                    </div>
+                                </div>
+
+                                {/* Minimum and Maximum Salary */}
+                                <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: "20px" }}>
+                                    <div>
+                                        <label style={{ fontSize: 14, color: "#6B7280", fontWeight: 500, display: "block", marginBottom: "8px" }}>
+                                            Minimum Salary
+                                        </label>
+                                        <div style={{ fontSize: 16, color: "#181D27", fontWeight: 500 }}>
+                                            {formData.salaryNegotiable ? "Negotiable" : (formData.minimumSalary || "-")}
+                                        </div>
+                                    </div>
+                                    <div>
+                                        <label style={{ fontSize: 14, color: "#6B7280", fontWeight: 500, display: "block", marginBottom: "8px" }}>
+                                            Maximum Salary
+                                        </label>
+                                        <div style={{ fontSize: 16, color: "#181D27", fontWeight: 500 }}>
+                                            {formData.salaryNegotiable ? "Negotiable" : (formData.maximumSalary || "-")}
+                                        </div>
+                                    </div>
+                                </div>
+
+                                {/* Job Description */}
+                                <div>
+                                    <label style={{ fontSize: 14, color: "#6B7280", fontWeight: 500, display: "block", marginBottom: "8px" }}>
+                                        Job Description
+                                    </label>
+                                    <div style={{ fontSize: 14, color: "#181D27", lineHeight: "1.6" }}>
+                                        {isEditing ? (
+                                            <textarea 
+                                                className="form-control" 
+                                                placeholder="Job Description" 
+                                                value={formData.description} 
+                                                onChange={(e) => setFormData({ ...formData, description: e.target.value })} 
+                                            />
+                                        ) : (
+                                            <div dangerouslySetInnerHTML={{ __html: formData.description }} />
+                                        )}
+                                    </div>
+                                </div>
                             </div>
                         </div>
-                        </div>
-                    </div>
-                    <CareerLink career={formData} />
-                    {/* Card for direct interview link */}
-                    <DirectInterviewLinkV2 formData={formData} setFormData={setFormData} />
                     {isEditing && 
                     <div style={{ display: "flex", justifyContent: "center", gap: 16, alignItems: "center", marginBottom: "16px", width: "100%" }}>
                          <button className="button-primary" style={{ width: "50%" }} onClick={handleCancelEdit}>Cancel</button>
                         <button className="button-primary" style={{ width: "50%" }} onClick={updateCareer}>Save Changes</button>
                     </div>}
-                    <div className="layered-card-outer">
-                      <div className="layered-card-middle">
-                      <div style={{ display: "flex", flexDirection: "row", alignItems: "center", justifyContent: "flex-start", width: "100%", gap: 8 }}>
-                      <div style={{ width: 32, height: 32, display: "flex", justifyContent: "center", alignItems: "center", gap: 8, background: "#181D27", borderRadius: "60px" }}>
-                      <i className="la la-cog" style={{ fontSize: 20, color: "#FFFFFF"}} /> 
-                      </div>
-                      <span style={{ fontSize: 16, color: "#181D27", fontWeight: 700 }}>Advanced Settings</span>
-                  </div>
 
-                      <div className="layered-card-content">
-                        <button 
-                        onClick={() => {
-                          deleteCareer();
-                        }}
-                        style={{ display: "flex", flexDirection: "row", alignItems: "center", justifyContent: "center", gap: 8,backgroundColor: "#FFFFFF", color: "#B32318", borderRadius: "60px", padding: "5px 10px", border: "1px solid #B32318", cursor: "pointer", fontWeight: 700, fontSize: 14 }}>
+                    {/* CV Review & Pre-Screening Questions Section */}
+                    <div style={{ 
+                        backgroundColor: "#F8F9FC", 
+                        borderRadius: "12px", 
+                        padding: "20px",
+                        display: "flex",
+                        flexDirection: "column",
+                        gap: "16px"
+                    }}>
+                        {/* Header */}
+                        <div style={{ display: "flex", flexDirection: "row", alignItems: "center", width: "100%" }}>
+                            <div style={{ display: "flex", flexDirection: "row", alignItems: "center", gap: 8 }}>
+                                <i className="la la-angle-down" style={{ fontSize: 20, color: "#717680" }} />
+                                <h3 style={{ 
+                                    fontSize: "18px", 
+                                    fontWeight: 700, 
+                                    color: "#181D27",
+                                    margin: 0
+                                }}>
+                                    CV Review & Pre-Screening Questions
+                                </h3>
+                            </div>
+                        </div>
+
+                        {/* Content */}
+                        <div style={{ 
+                            display: "flex", 
+                            flexDirection: "column", 
+                            gap: "20px",
+                            backgroundColor: "#FFFFFF",
+                            borderRadius: "8px",
+                            padding: "16px"
+                        }}>
+                            {/* CV Screening */}
+                            <div>
+                                <h4 style={{ fontSize: 18, fontWeight: 600, color: "#181D27", marginBottom: "12px", margin: 0 }}>
+                                    CV Screening
+                                </h4>
+                                <div style={{ fontSize: 16, color: "#6B7280", marginTop: "12px" }}>
+                                    Automatically endorse candidates who are{" "}
+                                    <span style={{ 
+                                        backgroundColor: "#EFF6FF", 
+                                        color: "#2563EB", 
+                                        padding: "4px 12px", 
+                                        borderRadius: "6px",
+                                        fontWeight: 600,
+                                        fontSize: 16
+                                    }}>
+                                        {formData.screeningSetting || "Good Fit"}
+                                    </span>
+                                    {" "}and above
+                                </div>
+                            </div>
+
+                            {/* CV Secret Prompt */}
+                            {formData.secretPrompt && formData.secretPrompt.trim() && (
+                                <div>
+                                    <div style={{ display: "flex", alignItems: "center", gap: 8, marginBottom: "12px" }}>
+                                        <i className="la la-magic" style={{ fontSize: 20, color: "#A855F7" }} />
+                                        <h4 style={{ fontSize: 18, fontWeight: 600, color: "#181D27", margin: 0 }}>
+                                            CV Secret Prompt
+                                        </h4>
+                                    </div>
+                                    <ul style={{ margin: 0, paddingLeft: "20px", color: "#6B7280", fontSize: 16, lineHeight: "1.8" }}>
+                                        {formData.secretPrompt.split('\n').filter(line => line.trim()).map((line, index) => (
+                                            <li key={index}>{line.trim()}</li>
+                                        ))}
+                                    </ul>
+                                </div>
+                            )}
+
+                            {/* Pre-Screening Questions */}
+                            {formData.preScreeningQuestions && formData.preScreeningQuestions.length > 0 && (
+                                <div>
+                                    <div style={{ display: "flex", alignItems: "center", gap: 8, marginBottom: "12px" }}>
+                                        <h4 style={{ fontSize: 18, fontWeight: 600, color: "#181D27", margin: 0 }}>
+                                            Pre-Screening Questions
+                                        </h4>
+                                        <span style={{ 
+                                            backgroundColor: "#F3F4F6", 
+                                            color: "#6B7280", 
+                                            padding: "4px 12px", 
+                                            borderRadius: "12px",
+                                            fontSize: 16,
+                                            fontWeight: 600
+                                        }}>
+                                            {formData.preScreeningQuestions.length}
+                                        </span>
+                                    </div>
+                                    <div style={{ display: "flex", flexDirection: "column", gap: "16px" }}>
+                                        {formData.preScreeningQuestions.map((question, index) => (
+                                            <div key={index} style={{ paddingBottom: index < formData.preScreeningQuestions.length - 1 ? "16px" : "0", borderBottom: index < formData.preScreeningQuestions.length - 1 ? "1px solid #F3F4F6" : "none" }}>
+                                                <div style={{ fontSize: 16, fontWeight: 600, color: "#181D27", marginBottom: "8px" }}>
+                                                    {index + 1}. {question.question}
+                                                </div>
+                                                {question.type === "dropdown" && question.options && (
+                                                    <ul style={{ margin: 0, paddingLeft: "20px", color: "#6B7280", fontSize: 16, lineHeight: "1.6" }}>
+                                                        {question.options.map((option, optIndex) => (
+                                                            <li key={optIndex}>{option}</li>
+                                                        ))}
+                                                    </ul>
+                                                )}
+                                                {question.type === "range" && question.preferredAnswer && (
+                                                    <div style={{ color: "#6B7280", fontSize: 16, fontStyle: "italic" }}>
+                                                        Preferred: {question.preferredAnswer}
+                                                    </div>
+                                                )}
+                                            </div>
+                                        ))}
+                                    </div>
+                                </div>
+                            )}
+
+                            {(!formData.preScreeningQuestions || formData.preScreeningQuestions.length === 0) && !formData.secretPrompt && (
+                                <div style={{ textAlign: "center", color: "#9CA3AF", fontSize: 14, padding: "16px 0" }}>
+                                    No CV screening settings or pre-screening questions configured
+                                </div>
+                            )}
+                        </div>
+                    </div>
+
+                    {/* AI Interview Setup Section */}
+                    <div style={{ 
+                        backgroundColor: "#F8F9FC", 
+                        borderRadius: "12px", 
+                        padding: "20px",
+                        display: "flex",
+                        flexDirection: "column",
+                        gap: "16px"
+                    }}>
+                        {/* Header */}
+                        <div style={{ display: "flex", flexDirection: "row", alignItems: "center", width: "100%" }}>
+                            <div style={{ display: "flex", flexDirection: "row", alignItems: "center", gap: 8 }}>
+                                <i className="la la-angle-down" style={{ fontSize: 20, color: "#717680" }} />
+                                <h3 style={{ 
+                                    fontSize: "18px", 
+                                    fontWeight: 700, 
+                                    color: "#181D27",
+                                    margin: 0
+                                }}>
+                                    AI Interview Setup
+                                </h3>
+                            </div>
+                        </div>
+
+                        {/* Content */}
+                        <div style={{ 
+                            display: "flex", 
+                            flexDirection: "column", 
+                            gap: "20px",
+                            backgroundColor: "#FFFFFF",
+                            borderRadius: "8px",
+                            padding: "16px"
+                        }}>
+                            {/* AI Interview Screening */}
+                            <div>
+                                <h4 style={{ fontSize: 18, fontWeight: 600, color: "#181D27", marginBottom: "12px", margin: 0 }}>
+                                    AI Interview Screening
+                                </h4>
+                                <div style={{ fontSize: 16, color: "#6B7280", marginTop: "12px" }}>
+                                    Automatically endorse candidates who are{" "}
+                                    <span style={{ 
+                                        backgroundColor: "#EFF6FF", 
+                                        color: "#2563EB", 
+                                        padding: "4px 12px", 
+                                        borderRadius: "6px",
+                                        fontWeight: 600,
+                                        fontSize: 16
+                                    }}>
+                                        {formData.aiInterviewScreening || "Good Fit"}
+                                    </span>
+                                    {" "}and above
+                                </div>
+                            </div>
+
+                            {/* Require Video on Interview */}
+                            <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center" }}>
+                                <h4 style={{ fontSize: 18, fontWeight: 600, color: "#181D27", margin: 0 }}>
+                                    Require Video on Interview
+                                </h4>
+                                <div style={{ display: "flex", alignItems: "center", gap: 8 }}>
+                                    <span style={{ fontSize: 16, color: "#6B7280", fontWeight: 500 }}>
+                                        {formData.requireVideo ? "Yes" : "No"}
+                                    </span>
+                                    {formData.requireVideo && (
+                                        <i className="la la-check-circle" style={{ fontSize: 22, color: "#10B981" }} />
+                                    )}
+                                </div>
+                            </div>
+
+                            {/* AI Interview Secret Prompt */}
+                            {formData.aiInterviewSecretPrompt && formData.aiInterviewSecretPrompt.trim() && (
+                                <div>
+                                    <div style={{ display: "flex", alignItems: "center", gap: 8, marginBottom: "12px" }}>
+                                        <i className="la la-magic" style={{ fontSize: 20, color: "#A855F7" }} />
+                                        <h4 style={{ fontSize: 18, fontWeight: 600, color: "#181D27", margin: 0 }}>
+                                            AI Interview Secret Prompt
+                                        </h4>
+                                    </div>
+                                    <ul style={{ margin: 0, paddingLeft: "20px", color: "#6B7280", fontSize: 16, lineHeight: "1.8" }}>
+                                        {formData.aiInterviewSecretPrompt.split('\n').filter(line => line.trim()).map((line, index) => (
+                                            <li key={index}>{line.trim()}</li>
+                                        ))}
+                                    </ul>
+                                </div>
+                            )}
+
+                            {/* Interview Questions */}
+                            {formData.questions && formData.questions.length > 0 && (
+                                <div>
+                                    <div style={{ display: "flex", alignItems: "center", gap: 8, marginBottom: "12px" }}>
+                                        <h4 style={{ fontSize: 18, fontWeight: 600, color: "#181D27", margin: 0 }}>
+                                            Interview Questions
+                                        </h4>
+                                        <span style={{ 
+                                            backgroundColor: "#F3F4F6", 
+                                            color: "#6B7280", 
+                                            padding: "4px 12px", 
+                                            borderRadius: "12px",
+                                            fontSize: 16,
+                                            fontWeight: 600
+                                        }}>
+                                            {formData.questions.reduce((acc, group) => acc + (group.questions?.length || 0), 0)}
+                                        </span>
+                                    </div>
+                                    <div style={{ display: "flex", flexDirection: "column", gap: "16px" }}>
+                                        {formData.questions.map((questionGroup, groupIndex) => (
+                                            questionGroup.questions && questionGroup.questions.length > 0 && (
+                                                <div key={groupIndex}>
+                                                    <h5 style={{ fontSize: 16, fontWeight: 600, color: "#181D27", margin: "0 0 8px 0" }}>
+                                                        {questionGroup.category}
+                                                    </h5>
+                                                    <ol style={{ margin: 0, paddingLeft: "20px", color: "#6B7280", fontSize: 16, lineHeight: "1.8" }}>
+                                                        {questionGroup.questions.map((question, qIndex) => (
+                                                            <li key={qIndex}>{question.question || question}</li>
+                                                        ))}
+                                                    </ol>
+                                                </div>
+                                            )
+                                        ))}
+                                    </div>
+                                </div>
+                            )}
+
+                            {(!formData.questions || formData.questions.length === 0) && !formData.aiInterviewSecretPrompt && (
+                                <div style={{ textAlign: "center", color: "#9CA3AF", fontSize: 14, padding: "16px 0" }}>
+                                    No AI interview settings or questions configured
+                                </div>
+                            )}
+                        </div>
+                    </div>
+                </div>
+
+                <div className="right-thread">
+                    <TeamAccessSection teamMembers={formData.teamMembers} />
+                    <CareerLink career={formData} />
+                    <DirectInterviewLinkV2 formData={formData} setFormData={setFormData} />
+                    <div style={{ 
+                        backgroundColor: "#F8F9FC", 
+                        borderRadius: "12px", 
+                        padding: "20px",
+                        display: "flex",
+                        flexDirection: "column",
+                        gap: "16px"
+                    }}>
+                        {/* Header */}
+                        <h3 style={{ 
+                            fontSize: "18px", 
+                            fontWeight: 700, 
+                            color: "#181D27",
+                            margin: 0
+                        }}>
+                            Advanced Settings
+                        </h3>
+                            
+                        {/* Content */}
+                        <div style={{ 
+                            display: "flex", 
+                            flexDirection: "column", 
+                            gap: "12px",
+                            backgroundColor: "#FFFFFF",
+                            borderRadius: "8px",
+                            padding: "16px",
+                            alignItems: "center"
+                        }}>
+                            <button 
+                                onClick={() => {
+                                    deleteCareer();
+                                }}
+                                style={{ 
+                                    display: "flex", 
+                                    flexDirection: "row", 
+                                    alignItems: "center", 
+                                    justifyContent: "center", 
+                                    gap: 8,
+                                    backgroundColor: "#FFFFFF", 
+                                    color: "#B32318", 
+                                    borderRadius: "8px", 
+                                    padding: "10px 16px", 
+                                    border: "1px solid #FECDCA", 
+                                    cursor: "pointer", 
+                                    fontWeight: 600, 
+                                    fontSize: 14,
+                                    width: "100%"
+                                }}
+                            >
                                 <i className="la la-trash" style={{ color: "#B32318", fontSize: 16 }}></i>
                                 <span>Delete this career</span>
-                        </button>
-                        <span style={{ fontSize: "14px", color: "#717680", textAlign: "center" }}>Be careful, this action cannot be undone.</span>
+                            </button>
+                            <span style={{ 
+                                fontSize: "14px", 
+                                color: "#6B7280", 
+                                textAlign: "center",
+                                fontWeight: 500
+                            }}>
+                                Be careful, this action cannot be undone.
+                            </span>
+                        </div>
                     </div>
-                  </div>
-                </div>
                 </div>
             </div>
             {showEditModal && (

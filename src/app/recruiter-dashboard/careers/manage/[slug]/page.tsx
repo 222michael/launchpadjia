@@ -285,6 +285,7 @@ export default function ManageCareerPage() {
                     lastEditedBy: response.data?.lastEditedBy || {},
                     employmentType: response.data?.employmentType || "Full-time",
                     orgID: response.data?.orgID || "",
+                    teamMembers: response.data?.teamMembers || [],
                 });
                 if (tab === "edit") {
                     setActiveTab("job-description");

@@ -171,7 +171,7 @@ td {
   }
 
   .left-thread {
-    width: 60%;
+    width: 55%;
     display: flex;
     flex-direction: column;
     gap: 20px;
@@ -182,7 +182,10 @@ td {
   }
 
   .right-thread {
-    width: 38%;
+    width: 43%;
+    display: flex;
+    flex-direction: column;
+    gap: 20px;
 
     @media screen and (max-width: 700px) {
       width: 100%;
