@@ -539,10 +539,10 @@ export default function ({ modalType, setModalType }) {
                   </span>
                 )}
 
-              {applicationData.location && (
+              {applicationData.city && (
                 <span className={`${styles.details} ${styles.withMargin}`}>
                   <img alt="" src={assetConstants.mapPin} />
-                  {applicationData.location}
+                  {applicationData.city}
                 </span>
               )}
 
@@ -553,20 +553,87 @@ export default function ({ modalType, setModalType }) {
                 </span>
               )}
 
-              {applicationData.workSetup && (
+              {applicationData.workArrangement && (
                 <div className={styles.tagContainer}>
-                  <span>{applicationData.workSetup}</span>
+                  <span>{applicationData.workArrangement}</span>
                 </div>
               )}
 
               <hr />
 
-              <p
-                className={styles.jobDescription}
-                dangerouslySetInnerHTML={{
-                  __html: applicationData.description,
-                }}
-              />
+              {/* Employment Type and Work Arrangement */}
+              {(applicationData.employmentType || applicationData.workArrangement) && (
+                <div className={styles.detailsRow}>
+                  {applicationData.employmentType && (
+                    <div className={styles.detailItem}>
+                      <span className={styles.label}>Employment Type</span>
+                      <span className={styles.value}>{applicationData.employmentType}</span>
+                    </div>
+                  )}
+                  {applicationData.workArrangement && (
+                    <div className={styles.detailItem}>
+                      <span className={styles.label}>Work Arrangement</span>
+                      <span className={styles.value}>{applicationData.workArrangement}</span>
+                    </div>
+                  )}
+                </div>
+              )}
+
+              {/* Location Details */}
+              {(applicationData.country || applicationData.state || applicationData.city) && (
+                <div className={styles.detailsRow}>
+                  {applicationData.country && (
+                    <div className={styles.detailItem}>
+                      <span className={styles.label}>Country</span>
+                      <span className={styles.value}>{applicationData.country}</span>
+                    </div>
+                  )}
+                  {applicationData.state && (
+                    <div className={styles.detailItem}>
+                      <span className={styles.label}>State / Province</span>
+                      <span className={styles.value}>{applicationData.state}</span>
+                    </div>
+                  )}
+                  {applicationData.city && (
+                    <div className={styles.detailItem}>
+                      <span className={styles.label}>City</span>
+                      <span className={styles.value}>{applicationData.city}</span>
+                    </div>
+                  )}
+                </div>
+              )}
+
+              {/* Salary Range */}
+              {(applicationData.minSalary || applicationData.maxSalary) && (
+                <div className={styles.detailsRow}>
+                  {applicationData.minSalary && (
+                    <div className={styles.detailItem}>
+                      <span className={styles.label}>Minimum Salary</span>
+                      <span className={styles.value}>{applicationData.minSalary}</span>
+                    </div>
+                  )}
+                  {applicationData.maxSalary && (
+                    <div className={styles.detailItem}>
+                      <span className={styles.label}>Maximum Salary</span>
+                      <span className={styles.value}>{applicationData.maxSalary}</span>
+                    </div>
+                  )}
+                </div>
+              )}
+
+              {/* Job Description */}
+              {applicationData.description && (
+                <>
+                  <div className={styles.sectionTitle}>Job Description</div>
+                  <p
+                    className={styles.jobDescription}
+                    dangerouslySetInnerHTML={{
+                      __html: applicationData.description,
+                    }}
+                  />
+                </>
+              )}
+
               <button onClick={handleClose}>Close</button>
             </div>
           </div>
