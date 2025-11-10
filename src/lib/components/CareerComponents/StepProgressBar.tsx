@@ -41,30 +41,52 @@ export default function StepProgressBar({ currentStep }: StepProgressBarProps) {
     },
   ];
 
+  const getProgressBarStyle = (step: Step, index: number) => {
+    if (step.isCompleted) {
+      // Completed - full gradient
+      return {
+        background: "linear-gradient(90deg, #fccec0 0%, #ebacc9 33%, #ceb6da 66%, #9fcaed 100%)",
+      };
+    } else if (step.isActive && index < steps.length - 1) {
+      // In progress - half gradient, half gray
+      return {
+        background: "linear-gradient(90deg, #fccec0 0%, #ebacc9 33%, #ceb6da 66%, #9fcaed 100%) 0 0 / 50% 100% no-repeat, #d9d9d9",
+      };
+    } else {
+      // Pending - gray
+      return {
+        background: "#d9d9d9",
+      };
+    }
+  };
+
+  const getStepIconStyle = (step: Step) => {
+    if (step.isCompleted) {
+      return {
+        background: "linear-gradient(135deg, #fccec0 0%, #ebacc9 33%, #ceb6da 66%, #9fcaed 100%)",
+        border: "none",
+      };
+    } else if (step.isActive) {
+      return {
+        background: "#FFFFFF",
+        border: "2px solid #9fcaed",
+      };
+    } else {
+      return {
+        background: "#d9d9d9",
+        border: "none",
+      };
+    }
+  };
+
   return (
     <div style={{ marginBottom: "2.5rem", padding: "0", width: "100%" }}>
       {/* Step Progress Bar */}
-      <div style={{ position: "relative", width: "100%" }}>
-        {/* Progress Lines Container */}
-        <div style={{ position: "absolute", top: "9px", left: "0", right: "0", display: "flex", alignItems: "center", zIndex: 1, paddingLeft: "10px", paddingRight: "10px" }}>
+      <div style={{ display: "flex", flexDirection: "column", gap: "16px" }}>
+        {/* Step Icons and Progress Bars Row */}
+        <div style={{ display: "flex", gap: "32px", alignItems: "center" }}>
           {steps.map((step, index) => (
-            index < steps.length - 1 && (
-              <div
-                key={`line-${step.number}`}
-                style={{
-                  flex: 1,
-                  height: "2px",
-                  backgroundColor: step.isCompleted ? "#000000" : "#D1D5DB",
-                }}
-              ></div>
-            )
-          ))}
-        </div>
-
-        {/* Steps Container */}
-        <div style={{ display: "flex", alignItems: "flex-start", justifyContent: "space-between", position: "relative", width: "100%", zIndex: 2 }}>
-          {steps.map((step) => (
-            <div key={step.number} style={{ display: "flex", flexDirection: "column", alignItems: "center", flex: 1 }}>
+            <React.Fragment key={step.number}>
               {/* Step Circle */}
               <div
                 style={{
@@ -74,14 +96,9 @@ export default function StepProgressBar({ currentStep }: StepProgressBarProps) {
                   display: "flex",
                   alignItems: "center",
                   justifyContent: "center",
-                  marginBottom: "10px",
+                  flexShrink: 0,
                   transition: "all 0.3s",
-                  backgroundColor: step.isCompleted 
-                    ? "#000000" 
-                    : step.isActive 
-                    ? "#FFFFFF" 
-                    : "#E5E7EB",
-                  border: step.isActive ? "2px solid #000000" : "none",
+                  ...getStepIconStyle(step),
                 }}
               >
                 {step.isCompleted ? (
@@ -92,28 +109,47 @@ export default function StepProgressBar({ currentStep }: StepProgressBarProps) {
                       width: "6px",
                       height: "6px",
                       borderRadius: "50%",
-                      backgroundColor: "#000000",
+                      background: "linear-gradient(135deg, #fccec0 0%, #ebacc9 33%, #ceb6da 66%, #9fcaed 100%)",
                     }}
                   ></div>
                 ) : null}
               </div>
-              
-              {/* Step Label */}
-              <span
-                style={{
-                  fontSize: "12px",
-                  textAlign: "center",
-                  width: "100%",
-                  color: step.isActive || step.isCompleted ? "#111827" : "#9CA3AF",
-                  fontWeight: step.isActive || step.isCompleted ? 600 : 400,
-                  lineHeight: "1.4",
-                  whiteSpace: "normal",
-                  wordWrap: "break-word",
-                }}
-              >
-                {step.label}
-              </span>
-            </div>
+
+              {/* Progress Bar (except after last step) */}
+              {index < steps.length - 1 && (
+                <div
+                  style={{
+                    flex: 1,
+                    height: "6px",
+                    borderRadius: "10px",
+                    transition: "all 0.3s",
+                    ...getProgressBarStyle(step, index),
+                  }}
+                ></div>
+              )}
+            </React.Fragment>
+          ))}
+        </div>
+
+        {/* Step Labels Row */}
+        <div style={{ display: "flex", justifyContent: "space-between", width: "100%" }}>
+          {steps.map((step) => (
+            <span
+              key={`label-${step.number}`}
+              style={{
+                flex: 1,
+                fontSize: "12px",
+                fontWeight: step.isActive || step.isCompleted ? 700 : 400,
+                lineHeight: "16px",
+                color: step.isActive || step.isCompleted ? "#181d27" : "#a4a7ae",
+                textAlign: "left",
+                whiteSpace: "normal",
+                wordWrap: "break-word",
+                maxWidth: "200px",
+              }}
+            >
+              {step.label}
+            </span>
           ))}
         </div>
       </div>
