@@ -3,9 +3,15 @@
 import { NextResponse } from "next/server";
 import connectMongoDB from "@/lib/mongoDB/mongoDB";
 import OpenAI from "openai";
+import { sanitizeObject } from "@/lib/utils/security";
 
 export async function POST(request: Request) {
-  const { interviewID, userEmail } = await request.json();
+  let { interviewID, userEmail, preScreeningAnswers } = await request.json();
+  
+  // Sanitize pre-screening answers to prevent XSS attacks
+  if (preScreeningAnswers) {
+    preScreeningAnswers = sanitizeObject(preScreeningAnswers, 'strict');
+  }
   const { db } = await connectMongoDB();
   const interviewData = await db.collection("interviews").findOne({
     interviewID,

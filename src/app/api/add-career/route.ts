@@ -1,9 +1,13 @@
 import { NextResponse } from "next/server";
 import connectMongoDB from "@/lib/mongoDB/mongoDB";
+import { sanitizeObject } from "@/lib/utils/security";
 
 export async function POST(request: Request) {
   try {
-    const requestData = await request.json();
+    let requestData = await request.json();
+    
+    // Sanitize all input data to prevent XSS attacks
+    requestData = sanitizeObject(requestData, 'rich');
     const { jobTitle, orgID, careerId, isDraft } = requestData;
 
     // For drafts, only orgID is required

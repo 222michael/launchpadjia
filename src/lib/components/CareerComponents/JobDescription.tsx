@@ -8,6 +8,7 @@ import DirectInterviewLinkV2 from "./DirectInterviewLinkV2";
 import CareerForm from "./CareerForm";
 import CareerLink from "./CareerLink";
 import TeamAccessSection from "./TeamAccessSection";
+import SafeHTML from "../common/SafeHTML";
 
 export default function JobDescription({ formData, setFormData, editModal, isEditing, setIsEditing, handleCancelEdit }: { formData: any, setFormData: (formData: any) => void, editModal: boolean, isEditing: boolean, setIsEditing: (isEditing: boolean) => void, handleCancelEdit: () => void }) {
     const { user } = useAppContext();
@@ -273,7 +274,7 @@ export default function JobDescription({ formData, setFormData, editModal, isEdi
                                                 onChange={(e) => setFormData({ ...formData, description: e.target.value })} 
                                             />
                                         ) : (
-                                            <div dangerouslySetInnerHTML={{ __html: formData.description }} />
+                                            <SafeHTML html={formData.description} level="rich" />
                                         )}
                                     </div>
                                 </div>

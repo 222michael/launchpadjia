@@ -1,10 +1,14 @@
 import { NextResponse } from "next/server";
 import connectMongoDB from "@/lib/mongoDB/mongoDB";
 import { ObjectId } from "mongodb";
+import { sanitizeObject } from "@/lib/utils/security";
 
 export async function POST(request: Request) {
   try {
     let requestData = await request.json();
+    
+    // Sanitize all input data to prevent XSS attacks
+    requestData = sanitizeObject(requestData, 'rich');
     const { _id } = requestData;
 
     // Validate required fields
