@@ -6,8 +6,13 @@ export async function POST(request: Request) {
   try {
     let requestData = await request.json();
     
+    console.log("Received career data:", JSON.stringify(requestData, null, 2));
+    
     // Sanitize all input data to prevent XSS attacks
     requestData = sanitizeObject(requestData, 'rich');
+    
+    console.log("Sanitized career data:", JSON.stringify(requestData, null, 2));
+    
     const { jobTitle, orgID, careerId, isDraft } = requestData;
 
     // For drafts, only orgID is required
@@ -69,10 +74,18 @@ export async function POST(request: Request) {
         _id: result.insertedId,
       },
     });
-  } catch (error) {
+  } catch (error: any) {
     console.error("Error saving career:", error);
+    console.error("Error details:", {
+      message: error.message,
+      stack: error.stack,
+      name: error.name
+    });
     return NextResponse.json(
-      { error: "Failed to save career" },
+      { 
+        error: "Failed to save career",
+        details: error.message 
+      },
       { status: 500 }
     );
   }

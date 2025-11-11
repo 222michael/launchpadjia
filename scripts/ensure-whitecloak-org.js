@@ -28,8 +28,24 @@ async function ensureWhiteCloakOrg() {
     });
 
     if (existingOrg) {
-      console.log('✅ White Cloak organization already exists:');
-      console.log(existingOrg);
+      console.log('✅ White Cloak organization already exists');
+      
+      // Update the organization with the logo if it doesn't have one
+      if (!existingOrg.image) {
+        await db.collection('organizations').updateOne(
+          { _id: existingOrg._id },
+          { 
+            $set: { 
+              image: '/whitecloak_logo.png',
+              tier: 'enterprise',
+              updatedAt: new Date()
+            } 
+          }
+        );
+        console.log('✅ Updated White Cloak organization with logo and tier');
+      } else {
+        console.log('Organization already has an image:', existingOrg.image);
+      }
     } else {
       // Create White Cloak organization
       const newOrg = {
@@ -39,7 +55,8 @@ async function ensureWhiteCloakOrg() {
         industry: 'Software Development',
         size: '50-200',
         location: 'Pasig City, Metro Manila, Philippines',
-        tier: 'premium',
+        tier: 'enterprise',
+        image: '/whitecloak_logo.png',
         createdAt: new Date(),
         updatedAt: new Date(),
       };

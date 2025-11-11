@@ -90,7 +90,16 @@ export function sanitizeObject<T extends Record<string, any>>(
   const sanitized: any = {};
 
   for (const [key, value] of Object.entries(obj)) {
-    if (value === null || value === undefined) {
+    // Skip sanitization for certain safe fields
+    const skipSanitization = [
+      'orgID', 'careerId', 'id', '_id', 'status', 'createdAt', 'updatedAt',
+      'salaryNegotiable', 'requireVideo', 'minimumSalary', 'maximumSalary',
+      'isDraft', 'currentStep', 'questionCountToAsk', 'category'
+    ];
+    
+    if (skipSanitization.includes(key)) {
+      sanitized[key] = value;
+    } else if (value === null || value === undefined) {
       sanitized[key] = value;
     } else if (typeof value === 'string') {
       sanitized[key] = sanitizeString(value, level);
@@ -98,13 +107,14 @@ export function sanitizeObject<T extends Record<string, any>>(
       sanitized[key] = value.map((item) =>
         typeof item === 'string'
           ? sanitizeString(item, level)
-          : typeof item === 'object'
+          : typeof item === 'object' && item !== null
           ? sanitizeObject(item, level)
           : item
       );
     } else if (typeof value === 'object') {
       sanitized[key] = sanitizeObject(value, level);
     } else {
+      // Pass through numbers, booleans, etc.
       sanitized[key] = value;
     }
   }
