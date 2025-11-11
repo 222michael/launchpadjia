@@ -3,22 +3,6 @@ import connectMongoDB from "@/lib/mongoDB/mongoDB";
 import { ObjectId } from "mongodb";
 import { sanitizeObject } from "@/lib/utils/security";
 
-// Force dynamic route
-export const dynamic = 'force-dynamic';
-export const runtime = 'nodejs';
-
-// Handle OPTIONS for CORS
-export async function OPTIONS(request: Request) {
-  return new Response(null, {
-    status: 200,
-    headers: {
-      'Access-Control-Allow-Origin': '*',
-      'Access-Control-Allow-Methods': 'GET, POST, PUT, DELETE, OPTIONS',
-      'Access-Control-Allow-Headers': 'Content-Type, Authorization',
-    },
-  });
-}
-
 export async function POST(request: Request) {
   try {
     let requestData = await request.json();
