@@ -160,8 +160,7 @@ export default function ({ children }) {
         ))}
 
         <div className={styles.footerContainer}>
-          © 2025
-          <span>White Cloak Technologies, Inc.</span>
+          © 2025 White Cloak Technologies Inc.
         </div>
       </aside>
 

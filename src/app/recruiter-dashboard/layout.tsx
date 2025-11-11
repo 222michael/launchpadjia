@@ -25,12 +25,13 @@ export default function Layout({ children }) {
       href: "/recruiter-dashboard/candidates",
       icon: "la la-id-badge",
     },
-    { label: "To Do", href: "/recruiter-dashboard/to-do", icon: "la la-cogs" },
-    // {
-    //   label: "Inbox",
-    //   href: "/recruiter-dashboard/inbox",
-    //   icon: "la la-envelope",
-    // },
+    { label: "To Do", href: "/recruiter-dashboard/to-do", icon: "la la-cogs", badge: 38 },
+    {
+      label: "Inbox",
+      href: "/recruiter-dashboard/inbox",
+      icon: "la la-envelope",
+      badge: 2
+    },
   ];
 
   const footerNavItems = [
@@ -99,7 +100,7 @@ export default function Layout({ children }) {
   return (
     <>
       <AuthGuard />
-      <div className="g-sidenav-show g-sidenav-pinned">
+      <div className="g-sidenav-show g-sidenav-pinned" style={{ background: "#ffffff" }}>
         <title>Jia - WhiteCloak Technologies</title>
         <SidebarV2
           activeLink={activeLink}
@@ -110,7 +111,7 @@ export default function Layout({ children }) {
         <div
           className="main-content bg-white"
           id="panel"
-          style={{ marginLeft: "260px", height: "100vh", overflowY: "scroll" }}
+          style={{ marginLeft: "240px", height: "100vh", overflowY: "scroll", background: "#ffffff" }}
         >
           {children}
         </div>

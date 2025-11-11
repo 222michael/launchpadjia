@@ -97,7 +97,7 @@ export default function HomeNavBar({ isStickyMobileMenu }: { isStickyMobileMenu:
               <div
                 style={{ display: "flex", alignItems: "center", gap: 16, justifyContent: "center" }}
               >
-                  <a className="navbar-links">
+                  <a href="/job-portal" className="navbar-links" style={{ cursor: "pointer" }}>
                   For Job Hunters
                 </a>
                 <a

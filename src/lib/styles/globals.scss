@@ -171,7 +171,7 @@ td {
   }
 
   .left-thread {
-    width: 55%;
+    width: 59.3%;
     display: flex;
     flex-direction: column;
     gap: 20px;
@@ -182,7 +182,7 @@ td {
   }
 
   .right-thread {
-    width: 43%;
+    width: 38.7%;
     display: flex;
     flex-direction: column;
     gap: 20px;
@@ -922,25 +922,26 @@ $gifURL: "/gr-1.gif";
 }
 
 .sidebar-v2 {
-  width: 100%;
+  width: 240px;
+  max-width: 240px;
+  min-width: 240px;
   background: #f8f9fc;
-  display: block;
+  display: flex;
   position: fixed;
   top: 0;
   left: 0;
-  max-width: 260px;
-  height: 100%;
-  overflow-y: auto;
+  height: 100vh;
+  overflow: hidden;
   flex-direction: column;
   justify-content: space-between;
   border-right: 1px solid #e9eaeb;
+  box-sizing: border-box;
 
   .sidebar-header {
     display: flex;
     flex-direction: column;
-    justify-content: space-between;
-    height: 100%;
     width: 100%;
+    box-sizing: border-box;
   }
 
   .sidebar-subheader {
@@ -2493,4 +2494,20 @@ html {
 
 .bg-green-100 {
   background-color: #e6f9f0 !important;
+}
+
+// Homepage Navigation Hover Effect
+.navbar-links {
+  position: relative;
+  transition: color 0.3s ease;
+  
+  &:hover {
+    color: #EC4899 !important; // Pink/Rose color like in the image
+  }
+}
+
+.home-navbar {
+  .navbar-links:hover {
+    color: #EC4899 !important;
+  }
 }

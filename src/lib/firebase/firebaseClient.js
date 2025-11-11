@@ -75,9 +75,14 @@ export async function signInWithGoogle(type) {
 
       const host = window.location.host;
 
+      // Debug logging
+      console.log("Auth API Response:", res.data);
+      console.log("User role:", res.data.role);
+
       if (
         (host.includes("localhost") || host.includes("hirejia.ai")) &&
-        res.data.role == "applicant"
+        res.data.role == "applicant" &&
+        type !== "job-portal"
       ) {
         Swal.fire({
           title: "No Account Found",
@@ -99,6 +104,14 @@ export async function signInWithGoogle(type) {
           if (result.isConfirmed) {
             Swal.close();
           } else if (result.dismiss === Swal.DismissReason.cancel) {
+            // Keep user logged in and redirect to job portal
+            localStorage.setItem("user", JSON.stringify({
+              email: profile.email,
+              image: profile.picture,
+              name: profile.name,
+              role: "applicant",
+            }));
+            localStorage.setItem("role", "applicant");
             window.location.href = "/job-portal";
           }
         });
@@ -163,12 +176,7 @@ export async function signInWithGoogle(type) {
         user: profile,
       });
 
-      if (orgData.data.length == 0) {
-        localStorage.role = "applicant";
-        window.location.href = "/job-portal";
-        return;
-      }
-
+      // If user has organization memberships, redirect to recruiter dashboard
       if (orgData.data.length > 0) {
         localStorage.role = "admin";
         const activeOrg = localStorage.activeOrg;
@@ -185,6 +193,28 @@ export async function signInWithGoogle(type) {
         } else {
           window.location.href = `/recruiter-dashboard?orgID=${parsedActiveOrg._id}`;
         }
+        return;
+      }
+
+      // If user is a platform admin with NO organizations, redirect to admin portal
+      if (res.data.role === "admin" || res.data.role === "super_admin") {
+        console.log("Platform admin with no orgs, redirecting to admin portal");
+        localStorage.role = res.data.role;
+        localStorage.user = JSON.stringify({
+          email: profile.email,
+          image: profile.picture,
+          name: profile.name,
+          role: res.data.role,
+        });
+        window.location.href = "/admin-portal";
+        return;
+      }
+
+      // Default: redirect to job portal for applicants
+      if (orgData.data.length == 0) {
+        localStorage.role = "applicant";
+        window.location.href = "/job-portal";
+        return;
       }
     })
     .catch((error) => {

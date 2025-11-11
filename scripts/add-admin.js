@@ -4,16 +4,27 @@ const path = require('path');
 
 // Load .env file manually
 const envPath = path.join(__dirname, '..', '.env');
+
 if (fs.existsSync(envPath)) {
   const envContent = fs.readFileSync(envPath, 'utf8');
-  envContent.split('\n').forEach(line => {
-    const match = line.match(/^([^=:#]+)=(.*)$/);
+  const lines = envContent.split('\n');
+  
+  lines.forEach((line) => {
+    const trimmed = line.trim();
+    
+    // Skip comments and empty lines
+    if (trimmed.startsWith('#') || !trimmed) return;
+    
+    const match = trimmed.match(/^([^=]+)=(.*)$/);
     if (match) {
       const key = match[1].trim();
       const value = match[2].trim();
       process.env[key] = value;
     }
   });
+} else {
+  console.error('❌ .env file not found at:', envPath);
+  process.exit(1);
 }
 
 async function addAdmin() {
@@ -48,7 +59,7 @@ async function addAdmin() {
     await client.connect();
     console.log('✅ Connected to MongoDB');
 
-    const db = client.db();
+    const db = client.db('jia-db');
     
     // Check if admin already exists
     const existingAdmin = await db.collection('admins').findOne({ email: email });
@@ -70,7 +81,7 @@ async function addAdmin() {
       image: `https://api.dicebear.com/9.x/shapes/svg?seed=${email}`,
       createdAt: new Date(),
       lastSeen: new Date(),
-      role: 'super_admin'
+      role: 'admin'
     };
 
     await db.collection('admins').insertOne(newAdmin);
@@ -78,7 +89,7 @@ async function addAdmin() {
     console.log('✅ Admin account created successfully!');
     console.log('📧 Email:', email);
     console.log('👤 Name:', name);
-    console.log('🔑 Role: super_admin');
+    console.log('🔑 Role: admin');
     console.log('\n🎉 You can now login with this email using Google Sign-In');
 
   } catch (error) {

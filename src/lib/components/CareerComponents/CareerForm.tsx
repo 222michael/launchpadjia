@@ -58,6 +58,8 @@ export default function CareerForm({ career, formType, setShowEditModal }: { car
     const [memberSearch, setMemberSearch] = useState("");
     const [orgMembers, setOrgMembers] = useState([]);
     const [selectedMembers, setSelectedMembers] = useState([]);
+    const [currentUserRole, setCurrentUserRole] = useState("Job Owner");
+    const [showJobOwnerError, setShowJobOwnerError] = useState(false);
     const [workSetup, setWorkSetup] = useState(career?.workSetup || "");
     const [workSetupRemarks, setWorkSetupRemarks] = useState(career?.workSetupRemarks || "");
     const [screeningSetting, setScreeningSetting] = useState(career?.screeningSetting || "Good Fit and above");
@@ -76,6 +78,13 @@ export default function CareerForm({ career, formType, setShowEditModal }: { car
     const [showValidationError, setShowValidationError] = useState(false);
     const [addingQuestionToCategoryId, setAddingQuestionToCategoryId] = useState<number | null>(null);
     const [newQuestionText, setNewQuestionText] = useState("");
+    const [editingQuestionIndex, setEditingQuestionIndex] = useState<{ categoryIndex: number; qIndex: number } | null>(null);
+    const [expandedSections, setExpandedSections] = useState({
+      careerDetails: true,
+      cvReview: true,
+      aiInterview: true,
+      pipelineStages: true
+    });
     const [salaryNegotiable, setSalaryNegotiable] = useState(career?.salaryNegotiable || true);
     const [minimumSalary, setMinimumSalary] = useState(career?.minimumSalary || "");
     const [maximumSalary, setMaximumSalary] = useState(career?.maximumSalary || "");
@@ -127,9 +136,10 @@ export default function CareerForm({ career, formType, setShowEditModal }: { car
     const [isGeneratingAllQuestions, setIsGeneratingAllQuestions] = useState(false);
 
     const isFormValid = () => {
-        // For step 1, only validate basic career information
+        // For step 1, validate basic career information including salary
         if (currentStep === 1) {
-            return jobTitle?.trim().length > 0 && description?.trim().length > 0 && workSetup?.trim().length > 0;
+            const hasValidSalary = salaryNegotiable || (minimumSalary && parseFloat(minimumSalary) > 0 && maximumSalary && parseFloat(maximumSalary) > 0);
+            return jobTitle?.trim().length > 0 && description?.trim().length > 0 && workSetup?.trim().length > 0 && hasValidSalary;
         }
         // For step 2 - all fields are optional
         if (currentStep === 2) {
@@ -140,8 +150,9 @@ export default function CareerForm({ career, formType, setShowEditModal }: { car
             const totalQuestions = questions.reduce((sum, category) => sum + category.questions.length, 0);
             return totalQuestions >= 5;
         }
-        // For final save (step 4 - Review Career), validate everything including questions
-        return jobTitle?.trim().length > 0 && description?.trim().length > 0 && questions.some((q) => q.questions.length > 0) && workSetup?.trim().length > 0;
+        // For final save (step 4 - Review Career), validate everything including questions and salary
+        const hasValidSalary = salaryNegotiable || (minimumSalary && parseFloat(minimumSalary) > 0 && maximumSalary && parseFloat(maximumSalary) > 0);
+        return jobTitle?.trim().length > 0 && description?.trim().length > 0 && questions.some((q) => q.questions.length > 0) && workSetup?.trim().length > 0 && hasValidSalary;
     }
 
     // Draft Management Functions
@@ -542,7 +553,8 @@ export default function CareerForm({ career, formType, setShowEditModal }: { car
             try {
               const response = await axios.post("/api/fetch-members", { orgID });
               if (response.status === 200) {
-                setOrgMembers(response.data.members || []);
+                // API returns members array directly, not wrapped in an object
+                setOrgMembers(Array.isArray(response.data) ? response.data : []);
               }
             } catch (error) {
               console.error("Error fetching members:", error);
@@ -565,15 +577,27 @@ export default function CareerForm({ career, formType, setShowEditModal }: { car
               <h1 style={{ fontSize: "24px", fontWeight: 550, color: "#111827" }}>{formType === "edit" ? "Edit career" : "Add new career"}</h1>
               <div style={{ display: "flex", flexDirection: "row", alignItems: "center", gap: "10px" }}>
                   <button
-                  disabled={!isFormValid() || isSavingCareer}
-                   style={{ width: "fit-content", color: "#414651", background: "#fff", border: "1px solid #D5D7DA", padding: "10px 20px", borderRadius: "8px", cursor: !isFormValid() || isSavingCareer ? "not-allowed" : "pointer", whiteSpace: "nowrap", fontSize: "14px", fontWeight: 500 }} onClick={() => {
-                    confirmSaveCareer("inactive");
+                  disabled={isSavingCareer}
+                   style={{ width: "fit-content", color: "#6B7280", background: "transparent", border: "1px solid #D5D7DA", padding: "10px 20px", borderRadius: "8px", cursor: isSavingCareer ? "not-allowed" : "pointer", whiteSpace: "nowrap", fontSize: "14px", fontWeight: 500 }} onClick={() => {
+                    window.history.back();
+                      }}>
+                          Cancel
+                  </button>
+                  <button
+                  disabled={isSavingCareer}
+                   style={{ width: "fit-content", color: "#414651", background: "#fff", border: "1px solid #D5D7DA", padding: "10px 20px", borderRadius: "8px", cursor: isSavingCareer ? "not-allowed" : "pointer", whiteSpace: "nowrap", fontSize: "14px", fontWeight: 500 }} onClick={() => {
+                    if (isFormValid()) {
+                      confirmSaveCareer("inactive");
+                      setShowValidationError(false);
+                    } else {
+                      setShowValidationError(true);
+                    }
                       }}>
                           Save as Unpublished
                   </button>
                   <button 
-                  disabled={!isFormValid() || isSavingCareer}
-                  style={{ width: "fit-content", background: !isFormValid() || isSavingCareer ? "#D5D7DA" : "black", color: "#fff", border: "none", padding: "10px 20px", borderRadius: "8px", cursor: !isFormValid() || isSavingCareer ? "not-allowed" : "pointer", whiteSpace: "nowrap", fontSize: "14px", fontWeight: 500, display: "flex", alignItems: "center", gap: "8px" }} onClick={() => {
+                  disabled={isSavingCareer}
+                  style={{ width: "fit-content", background: isSavingCareer ? "#D5D7DA" : "black", color: "#fff", border: "none", padding: "10px 20px", borderRadius: "8px", cursor: isSavingCareer ? "not-allowed" : "pointer", whiteSpace: "nowrap", fontSize: "14px", fontWeight: 500, display: "flex", alignItems: "center", gap: "8px" }} onClick={() => {
                     if (currentStep < 4) {
                       if (isFormValid()) {
                         setCurrentStep(currentStep + 1);
@@ -582,7 +606,12 @@ export default function CareerForm({ career, formType, setShowEditModal }: { car
                         setShowValidationError(true);
                       }
                     } else {
-                      confirmSaveCareer("active");
+                      if (isFormValid()) {
+                        confirmSaveCareer("active");
+                        setShowValidationError(false);
+                      } else {
+                        setShowValidationError(true);
+                      }
                     }
                   }}>
                       Save and Continue
@@ -600,16 +629,26 @@ export default function CareerForm({ career, formType, setShowEditModal }: { car
                         Cancel
                 </button>
                 <button
-                  disabled={!isFormValid() || isSavingCareer}
-                   style={{ width: "fit-content", color: "#414651", background: "#fff", border: "1px solid #D5D7DA", padding: "8px 16px", borderRadius: "60px", cursor: !isFormValid() || isSavingCareer ? "not-allowed" : "pointer", whiteSpace: "nowrap" }} onClick={() => {
-                    updateCareer("inactive");
+                  disabled={isSavingCareer}
+                   style={{ width: "fit-content", color: "#414651", background: "#fff", border: "1px solid #D5D7DA", padding: "8px 16px", borderRadius: "60px", cursor: isSavingCareer ? "not-allowed" : "pointer", whiteSpace: "nowrap" }} onClick={() => {
+                    if (isFormValid()) {
+                      updateCareer("inactive");
+                      setShowValidationError(false);
+                    } else {
+                      setShowValidationError(true);
+                    }
                     }}>
                           Save Changes as Unpublished
                   </button>
                   <button 
-                  disabled={!isFormValid() || isSavingCareer}
-                  style={{ width: "fit-content", background: !isFormValid() || isSavingCareer ? "#D5D7DA" : "black", color: "#fff", border: "1px solid #E9EAEB", padding: "8px 16px", borderRadius: "60px", cursor: !isFormValid() || isSavingCareer ? "not-allowed" : "pointer", whiteSpace: "nowrap"}} onClick={() => {
-                    updateCareer("active");
+                  disabled={isSavingCareer}
+                  style={{ width: "fit-content", background: isSavingCareer ? "#D5D7DA" : "black", color: "#fff", border: "1px solid #E9EAEB", padding: "8px 16px", borderRadius: "60px", cursor: isSavingCareer ? "not-allowed" : "pointer", whiteSpace: "nowrap"}} onClick={() => {
+                    if (isFormValid()) {
+                      updateCareer("active");
+                      setShowValidationError(false);
+                    } else {
+                      setShowValidationError(true);
+                    }
                   }}>
                     <i className="la la-check-circle" style={{ color: "#fff", fontSize: 20, marginRight: 8 }}></i>
                       Save Changes as Published
@@ -626,8 +665,8 @@ export default function CareerForm({ career, formType, setShowEditModal }: { car
           />
         )}
         
-        <div style={{ display: "flex", flexDirection: "row", justifyContent: "space-between", width: "100%", gap: 16, alignItems: "flex-start", marginTop: 16 }}>
-        <div style={{ width: "75%", display: "flex", flexDirection: "column", gap: 24 }}>
+        <div style={{ display: "flex", flexDirection: "row", justifyContent: "space-between", width: "100%", gap: 24, alignItems: "flex-start", marginTop: 16 }}>
+        <div style={{ width: "68%", display: "flex", flexDirection: "column", gap: 24 }}>
           
           {/* Step 1: Career Details & Team Access */}
           {currentStep === 1 && (
@@ -660,10 +699,15 @@ export default function CareerForm({ career, formType, setShowEditModal }: { car
                     width: "100%",
                     padding: "10px 14px",
                     fontSize: "14px",
-                    border: "1px solid #D1D5DB",
+                    border: showValidationError && !jobTitle?.trim() ? "1px solid #EF4444" : "1px solid #D1D5DB",
                     borderRadius: "8px",
                   }}
                 />
+                {showValidationError && !jobTitle?.trim() && (
+                  <p style={{ fontSize: "13px", color: "#EF4444", marginTop: "6px", marginBottom: 0 }}>
+                    This is a required field.
+                  </p>
+                )}
               </div>
             </div>
 
@@ -696,6 +740,11 @@ export default function CareerForm({ career, formType, setShowEditModal }: { car
                     settingList={workSetupOptions}
                     placeholder="Choose work arrangement"
                   />
+                  {showValidationError && !workSetup?.trim() && (
+                    <p style={{ fontSize: "13px", color: "#EF4444", marginTop: "6px", marginBottom: 0 }}>
+                      This is a required field.
+                    </p>
+                  )}
                 </div>
               </div>
             </div>
@@ -795,6 +844,7 @@ export default function CareerForm({ career, formType, setShowEditModal }: { car
                       onChange={(e) => setMinimumSalary(e.target.value || "")}
                       placeholder="0"
                       min={0}
+                      disabled={salaryNegotiable}
                       className="form-control"
                       style={{
                         width: "100%",
@@ -803,8 +853,9 @@ export default function CareerForm({ career, formType, setShowEditModal }: { car
                         paddingLeft: "36px",
                         paddingRight: "60px",
                         fontSize: "14px",
-                        border: "1px solid #D1D5DB",
+                        border: showValidationError && !salaryNegotiable && (!minimumSalary || parseFloat(minimumSalary) <= 0) ? "1px solid #EF4444" : "1px solid #D1D5DB",
                         borderRadius: "8px",
+                        backgroundColor: salaryNegotiable ? "#F3F4F6" : "#FFFFFF",
                       }}
                     />
                     <span style={{
@@ -819,6 +870,11 @@ export default function CareerForm({ career, formType, setShowEditModal }: { car
                       PHP
                     </span>
                   </div>
+                  {showValidationError && !salaryNegotiable && (!minimumSalary || parseFloat(minimumSalary) <= 0) && (
+                    <p style={{ fontSize: "13px", color: "#EF4444", marginTop: "6px", marginBottom: 0 }}>
+                      This is a required field.
+                    </p>
+                  )}
                 </div>
                 
                 <div>
@@ -843,6 +899,7 @@ export default function CareerForm({ career, formType, setShowEditModal }: { car
                       onChange={(e) => setMaximumSalary(e.target.value || "")}
                       placeholder="0"
                       min={0}
+                      disabled={salaryNegotiable}
                       className="form-control"
                       style={{
                         width: "100%",
@@ -851,8 +908,9 @@ export default function CareerForm({ career, formType, setShowEditModal }: { car
                         paddingLeft: "36px",
                         paddingRight: "60px",
                         fontSize: "14px",
-                        border: "1px solid #D1D5DB",
+                        border: showValidationError && !salaryNegotiable && (!maximumSalary || parseFloat(maximumSalary) <= 0) ? "1px solid #EF4444" : "1px solid #D1D5DB",
                         borderRadius: "8px",
+                        backgroundColor: salaryNegotiable ? "#F3F4F6" : "#FFFFFF",
                       }}
                     />
                     <span style={{
@@ -867,6 +925,11 @@ export default function CareerForm({ career, formType, setShowEditModal }: { car
                       PHP
                     </span>
                   </div>
+                  {showValidationError && !salaryNegotiable && (!maximumSalary || parseFloat(maximumSalary) <= 0) && (
+                    <p style={{ fontSize: "13px", color: "#EF4444", marginTop: "6px", marginBottom: 0 }}>
+                      This is a required field.
+                    </p>
+                  )}
                 </div>
               </div>
             </div>
@@ -883,6 +946,11 @@ export default function CareerForm({ career, formType, setShowEditModal }: { car
             {/* White Card Container */}
             <div style={{ backgroundColor: "#FFFFFF", borderRadius: "8px", padding: "24px", boxShadow: "0 1px 3px 0 rgba(0, 0, 0, 0.1)" }}>
               <RichTextEditor setText={setDescription} text={description} />
+              {showValidationError && !description?.trim() && (
+                <p style={{ fontSize: "13px", color: "#EF4444", marginTop: "8px", marginBottom: 0 }}>
+                  This is a required field.
+                </p>
+              )}
             </div>
           </div>
 
@@ -895,61 +963,72 @@ export default function CareerForm({ career, formType, setShowEditModal }: { car
 
             {/* White Card Container */}
             <div style={{ backgroundColor: "#FFFFFF", borderRadius: "8px", padding: "24px", boxShadow: "0 1px 3px 0 rgba(0, 0, 0, 0.1)" }}>
-              {/* Add more members header */}
+              {/* Add more members header with button on right */}
               <div style={{ marginBottom: "24px" }}>
-                <h3 style={{ fontSize: "16px", fontWeight: 600, color: "#111827", marginBottom: "8px" }}>
-                  Add more members
-                </h3>
-                <p style={{ fontSize: "14px", color: "#6B7280", marginBottom: "16px" }}>
-                  You can add other members to collaborate on this career.
-                </p>
-                
-                {/* Add member button/dropdown */}
-                <div style={{ position: "relative" }}>
-                  <button
-                    onClick={() => setShowMemberDropdown(!showMemberDropdown)}
-                    type="button"
-                    style={{
-                      width: "100%",
-                      padding: "10px 14px",
-                      fontSize: "14px",
-                      color: "#6B7280",
-                      backgroundColor: "#FFFFFF",
-                      border: "1px solid #D1D5DB",
-                      borderRadius: "8px",
-                      textAlign: "left",
-                      cursor: "pointer",
-                      display: "flex",
-                      alignItems: "center",
-                      gap: "8px",
-                    }}
-                  >
-                    <i className="la la-user-plus" style={{ fontSize: 18 }}></i>
-                    Add member
-                    <i className={`la la-angle-${showMemberDropdown ? 'up' : 'down'}`} style={{ fontSize: 18, marginLeft: "auto" }}></i>
-                  </button>
+                <div style={{ display: "flex", justifyContent: "space-between", alignItems: "flex-start", marginBottom: "8px" }}>
+                  <div style={{ flex: 1 }}>
+                    <h3 style={{ fontSize: "16px", fontWeight: 600, color: "#111827", marginBottom: "8px" }}>
+                      Add more members
+                    </h3>
+                    <p style={{ fontSize: "14px", color: "#6B7280" }}>
+                      You can add other members to collaborate on this career.
+                    </p>
+                  </div>
+                  
+                  {/* Add member button/dropdown - positioned on the right */}
+                  <div style={{ position: "relative", marginLeft: "24px" }}>
+                    <button
+                      onClick={() => setShowMemberDropdown(!showMemberDropdown)}
+                      type="button"
+                      style={{
+                        minWidth: "200px",
+                        padding: "10px 16px",
+                        fontSize: "14px",
+                        fontWeight: 500,
+                        color: "#374151",
+                        backgroundColor: "#FFFFFF",
+                        border: "1px solid #D1D5DB",
+                        borderRadius: "8px",
+                        cursor: "pointer",
+                        display: "flex",
+                        alignItems: "center",
+                        gap: "8px",
+                        whiteSpace: "nowrap",
+                      }}
+                    >
+                      <i className="la la-user-plus" style={{ fontSize: 18, color: "#6B7280" }}></i>
+                      Add member
+                      <i className={`la la-angle-${showMemberDropdown ? 'up' : 'down'}`} style={{ fontSize: 18, marginLeft: "auto", color: "#6B7280" }}></i>
+                    </button>
 
-                  {/* Dropdown Menu */}
-                  {showMemberDropdown && (
-                    <div style={{
-                      position: "absolute",
-                      top: "calc(100% + 4px)",
-                      left: 0,
-                      right: 0,
-                      backgroundColor: "#FFFFFF",
-                      border: "1px solid #D1D5DB",
-                      borderRadius: "8px",
-                      boxShadow: "0 4px 6px -1px rgba(0, 0, 0, 0.1), 0 2px 4px -1px rgba(0, 0, 0, 0.06)",
-                      zIndex: 10,
-                      maxHeight: "300px",
-                      overflow: "hidden",
-                      display: "flex",
-                      flexDirection: "column",
-                    }}>
+                    {/* Dropdown Menu - Figma Design */}
+                    {showMemberDropdown && (
+                      <div style={{
+                        position: "absolute",
+                        top: "calc(100% + 8px)",
+                        right: 0,
+                        width: "380px",
+                        backgroundColor: "#FFFFFF",
+                        border: "1px solid #E5E7EB",
+                        borderRadius: "12px",
+                        boxShadow: "0 10px 15px -3px rgba(0, 0, 0, 0.1), 0 4px 6px -2px rgba(0, 0, 0, 0.05)",
+                        zIndex: 1000,
+                        maxHeight: "420px",
+                        overflow: "hidden",
+                        display: "flex",
+                        flexDirection: "column",
+                      }}>
                       {/* Search Input */}
-                      <div style={{ padding: "12px", borderBottom: "1px solid #E5E7EB" }}>
+                      <div style={{ padding: "16px 16px 12px 16px" }}>
                         <div style={{ position: "relative" }}>
-                          <i className="la la-search" style={{ position: "absolute", left: "12px", top: "50%", transform: "translateY(-50%)", color: "#9CA3AF", fontSize: 16 }}></i>
+                          <i className="la la-search" style={{ 
+                            position: "absolute", 
+                            left: "14px", 
+                            top: "50%", 
+                            transform: "translateY(-50%)", 
+                            color: "#9CA3AF", 
+                            fontSize: 18 
+                          }}></i>
                           <input
                             type="text"
                             placeholder="Search member"
@@ -957,10 +1036,12 @@ export default function CareerForm({ career, formType, setShowEditModal }: { car
                             onChange={(e) => setMemberSearch(e.target.value)}
                             style={{
                               width: "100%",
-                              padding: "8px 12px 8px 36px",
+                              padding: "10px 14px 10px 42px",
                               fontSize: "14px",
-                              border: "1px solid #D1D5DB",
-                              borderRadius: "6px",
+                              color: "#111827",
+                              backgroundColor: "#F9FAFB",
+                              border: "1px solid #E5E7EB",
+                              borderRadius: "8px",
                               outline: "none",
                             }}
                           />
@@ -968,7 +1049,11 @@ export default function CareerForm({ career, formType, setShowEditModal }: { car
                       </div>
 
                       {/* Members List */}
-                      <div style={{ overflowY: "auto", maxHeight: "240px" }}>
+                      <div style={{ 
+                        overflowY: "auto", 
+                        maxHeight: "300px",
+                        padding: "0 8px 8px 8px"
+                      }}>
                         {orgMembers
                           .filter((member: any) => 
                             member.email !== user?.email &&
@@ -976,7 +1061,7 @@ export default function CareerForm({ career, formType, setShowEditModal }: { car
                             (member.name?.toLowerCase().includes(memberSearch.toLowerCase()) ||
                              member.email?.toLowerCase().includes(memberSearch.toLowerCase()))
                           )
-                          .map((member: any) => (
+                          .map((member: any, idx: number) => (
                             <div
                               key={member.email}
                               onClick={() => {
@@ -985,21 +1070,22 @@ export default function CareerForm({ career, formType, setShowEditModal }: { car
                                 setMemberSearch("");
                               }}
                               style={{
-                                padding: "12px 16px",
+                                padding: "12px",
                                 display: "flex",
                                 alignItems: "center",
                                 gap: "12px",
                                 cursor: "pointer",
-                                borderBottom: "1px solid #F3F4F6",
-                                transition: "background-color 0.2s",
+                                borderRadius: "8px",
+                                transition: "background-color 0.15s ease",
+                                marginBottom: "4px",
                               }}
                               onMouseEnter={(e) => e.currentTarget.style.backgroundColor = "#F9FAFB"}
                               onMouseLeave={(e) => e.currentTarget.style.backgroundColor = "transparent"}
                             >
                               {/* Avatar */}
                               <div style={{ 
-                                width: "36px", 
-                                height: "36px", 
+                                width: "40px", 
+                                height: "40px", 
                                 borderRadius: "50%", 
                                 backgroundColor: "#E5E7EB",
                                 display: "flex",
@@ -1007,20 +1093,35 @@ export default function CareerForm({ career, formType, setShowEditModal }: { car
                                 justifyContent: "center",
                                 overflow: "hidden",
                                 flexShrink: 0,
+                                border: "2px solid #F3F4F6"
                               }}>
                                 {member.image ? (
                                   <img src={member.image} alt={member.name} style={{ width: "100%", height: "100%", objectFit: "cover" }} />
                                 ) : (
-                                  <i className="la la-user" style={{ fontSize: 18, color: "#6B7280" }}></i>
+                                  <i className="la la-user" style={{ fontSize: 20, color: "#6B7280" }}></i>
                                 )}
                               </div>
                               
                               {/* Member Info */}
                               <div style={{ flex: 1, minWidth: 0 }}>
-                                <div style={{ fontSize: "14px", fontWeight: 500, color: "#111827", overflow: "hidden", textOverflow: "ellipsis", whiteSpace: "nowrap" }}>
+                                <div style={{ 
+                                  fontSize: "15px", 
+                                  fontWeight: 600, 
+                                  color: "#111827", 
+                                  overflow: "hidden", 
+                                  textOverflow: "ellipsis", 
+                                  whiteSpace: "nowrap",
+                                  marginBottom: "2px"
+                                }}>
                                   {member.name}
                                 </div>
-                                <div style={{ fontSize: "13px", color: "#6B7280", overflow: "hidden", textOverflow: "ellipsis", whiteSpace: "nowrap" }}>
+                                <div style={{ 
+                                  fontSize: "13px", 
+                                  color: "#6B7280", 
+                                  overflow: "hidden", 
+                                  textOverflow: "ellipsis", 
+                                  whiteSpace: "nowrap" 
+                                }}>
                                   {member.email}
                                 </div>
                               </div>
@@ -1033,17 +1134,43 @@ export default function CareerForm({ career, formType, setShowEditModal }: { car
                           (member.name?.toLowerCase().includes(memberSearch.toLowerCase()) ||
                            member.email?.toLowerCase().includes(memberSearch.toLowerCase()))
                         ).length === 0 && (
-                          <div style={{ padding: "24px", textAlign: "center", color: "#6B7280", fontSize: "14px" }}>
+                          <div style={{ 
+                            padding: "32px 24px", 
+                            textAlign: "center", 
+                            color: "#9CA3AF", 
+                            fontSize: "14px",
+                            fontWeight: 500
+                          }}>
                             No members found
                           </div>
                         )}
                       </div>
                     </div>
-                  )}
+                    )}
+                  </div>
                 </div>
               </div>
 
-              {/* Current user as Job Owner */}
+              {/* Job Owner Error Message */}
+              {showJobOwnerError && (
+                <div style={{ 
+                  display: "flex", 
+                  alignItems: "center", 
+                  gap: "8px", 
+                  padding: "12px 16px", 
+                  backgroundColor: "#FEF2F2", 
+                  border: "1px solid #FEE2E2",
+                  borderRadius: "8px",
+                  marginBottom: "16px"
+                }}>
+                  <i className="la la-exclamation-triangle" style={{ fontSize: 20, color: "#DC2626" }}></i>
+                  <span style={{ fontSize: "14px", color: "#DC2626", fontWeight: 500 }}>
+                    Career must have a job owner. Please assign a job owner.
+                  </span>
+                </div>
+              )}
+
+              {/* Current user */}
               <div style={{ display: "flex", alignItems: "center", gap: "16px", paddingBottom: "16px", borderBottom: "1px solid #E5E7EB" }}>
                 {/* User Avatar */}
                 <div style={{ 
@@ -1073,14 +1200,19 @@ export default function CareerForm({ career, formType, setShowEditModal }: { car
                   </div>
                 </div>
 
-                {/* Role Dropdown */}
+                {/* Role Dropdown - Now editable */}
                 <RoleDropdown
-                  value="Job Owner"
-                  onChange={() => {}}
+                  value={currentUserRole}
+                  onChange={(newRole: string) => {
+                    setCurrentUserRole(newRole);
+                    // Check if there's still a job owner
+                    const hasJobOwner = newRole === "Job Owner" || selectedMembers.some((m: any) => m.role === "Job Owner");
+                    setShowJobOwnerError(!hasJobOwner);
+                  }}
                   disabled={false}
                 />
 
-                {/* Delete button (disabled for owner) */}
+                {/* Delete button (disabled for current user) */}
                 <button
                   disabled
                   style={{
@@ -1133,13 +1265,22 @@ export default function CareerForm({ career, formType, setShowEditModal }: { car
                       const updated = [...selectedMembers];
                       updated[index].role = newRole;
                       setSelectedMembers(updated);
+                      
+                      // Check if there's still a job owner after this change
+                      const hasJobOwner = currentUserRole === "Job Owner" || updated.some((m: any) => m.role === "Job Owner");
+                      setShowJobOwnerError(!hasJobOwner);
                     }}
                   />
 
                   {/* Delete button */}
                   <button
                     onClick={() => {
-                      setSelectedMembers(selectedMembers.filter((m: any) => m.email !== member.email));
+                      const updatedMembers = selectedMembers.filter((m: any) => m.email !== member.email);
+                      setSelectedMembers(updatedMembers);
+                      
+                      // Check if there's still a job owner after deletion
+                      const hasJobOwner = currentUserRole === "Job Owner" || updatedMembers.some((m: any) => m.role === "Job Owner");
+                      setShowJobOwnerError(!hasJobOwner);
                     }}
                     type="button"
                     style={{
@@ -1194,7 +1335,6 @@ export default function CareerForm({ career, formType, setShowEditModal }: { car
                 {/* CV Secret Prompt */}
                 <div>
                   <div style={{ display: "flex", alignItems: "center", gap: "8px", marginBottom: "8px", position: "relative" }}>
-                    <i className="la la-sparkles" style={{ fontSize: 18, color: "#EC4899" }}></i>
                     <h3 style={{ fontSize: "16px", fontWeight: 600, color: "#374151", margin: 0 }}>
                       CV Secret Prompt <span style={{ fontWeight: 400, color: "#9CA3AF" }}>(optional)</span>
                     </h3>
@@ -2270,9 +2410,9 @@ export default function CareerForm({ career, formType, setShowEditModal }: { car
                             <button
                               type="button"
                               onClick={() => {
-                                const updated = [...questions];
-                                updated[categoryIndex].questions = updated[categoryIndex].questions.filter((_: any, i: number) => i !== qIndex);
-                                setQuestions(updated);
+                                setEditingQuestionIndex({ categoryIndex, qIndex });
+                                setNewQuestionText(q);
+                                setAddingQuestionToCategoryId(category.id);
                               }}
                               style={{
                                 padding: "6px 12px",
@@ -2320,16 +2460,19 @@ export default function CareerForm({ career, formType, setShowEditModal }: { car
                           onChange={(e) => setNewQuestionText(e.target.value)}
                           placeholder="Enter your question..."
                           autoFocus
+                          rows={3}
                           style={{
                             width: "100%",
-                            minHeight: "80px",
+                            height: "80px",
+                            maxHeight: "120px",
                             padding: "12px 14px",
                             fontSize: "14px",
                             border: "1px solid #D1D5DB",
                             borderRadius: "8px",
                             resize: "vertical",
                             fontFamily: "inherit",
-                            marginBottom: "8px"
+                            marginBottom: "8px",
+                            overflow: "auto"
                           }}
                         />
                         <div style={{ display: "flex", gap: "8px", justifyContent: "flex-end" }}>
@@ -2338,6 +2481,7 @@ export default function CareerForm({ career, formType, setShowEditModal }: { car
                             onClick={() => {
                               setAddingQuestionToCategoryId(null);
                               setNewQuestionText("");
+                              setEditingQuestionIndex(null);
                             }}
                             style={{
                               padding: "8px 16px",
@@ -2359,7 +2503,16 @@ export default function CareerForm({ career, formType, setShowEditModal }: { car
                                 if (!updated[categoryIndex].questions) {
                                   updated[categoryIndex].questions = [];
                                 }
-                                updated[categoryIndex].questions.push(newQuestionText.trim());
+                                
+                                if (editingQuestionIndex && editingQuestionIndex.categoryIndex === categoryIndex) {
+                                  // Update existing question
+                                  updated[categoryIndex].questions[editingQuestionIndex.qIndex] = newQuestionText.trim();
+                                  setEditingQuestionIndex(null);
+                                } else {
+                                  // Add new question
+                                  updated[categoryIndex].questions.push(newQuestionText.trim());
+                                }
+                                
                                 setQuestions(updated);
                                 setAddingQuestionToCategoryId(null);
                                 setNewQuestionText("");
@@ -2376,7 +2529,7 @@ export default function CareerForm({ career, formType, setShowEditModal }: { car
                               cursor: newQuestionText.trim() ? "pointer" : "not-allowed"
                             }}
                           >
-                            Add Question
+                            {editingQuestionIndex ? "Save Changes" : "Add Question"}
                           </button>
                         </div>
                       </div>
@@ -2477,14 +2630,20 @@ export default function CareerForm({ career, formType, setShowEditModal }: { car
             <div style={{ backgroundColor: "#F9FAFB", borderRadius: "12px", padding: "24px" }}>
               {/* Career Details & Team Access Section */}
               <div style={{ marginBottom: "24px" }}>
-                <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", marginBottom: "16px" }}>
-                  <h2 style={{ fontSize: "18px", fontWeight: 600, color: "#111827", margin: 0 }}>
-                    <i className="la la-angle-down" style={{ fontSize: 20, marginRight: "8px" }}></i>
+                <div 
+                  style={{ display: "flex", justifyContent: "space-between", alignItems: "center", marginBottom: "16px", cursor: "pointer" }}
+                  onClick={() => setExpandedSections({...expandedSections, careerDetails: !expandedSections.careerDetails})}
+                >
+                  <h2 style={{ fontSize: "18px", fontWeight: 600, color: "#111827", margin: 0, display: "flex", alignItems: "center" }}>
+                    <i className={`la la-angle-${expandedSections.careerDetails ? 'down' : 'right'}`} style={{ fontSize: 20, marginRight: "8px" }}></i>
                     Career Details & Team Access
                   </h2>
                   <button
                     type="button"
-                    onClick={() => setCurrentStep(1)}
+                    onClick={(e) => {
+                      e.stopPropagation();
+                      setCurrentStep(1);
+                    }}
                     style={{
                       padding: "6px 12px",
                       backgroundColor: "transparent",
@@ -2503,6 +2662,7 @@ export default function CareerForm({ career, formType, setShowEditModal }: { car
                   </button>
                 </div>
 
+                {expandedSections.careerDetails && (
                 <div style={{ backgroundColor: "#FFFFFF", borderRadius: "8px", padding: "20px", boxShadow: "0 1px 3px 0 rgba(0, 0, 0, 0.1)" }}>
                   <div style={{ marginBottom: "20px" }}>
                     <h3 style={{ fontSize: "14px", fontWeight: 600, color: "#6B7280", marginBottom: "8px" }}>Job Title</h3>
@@ -2595,18 +2755,25 @@ export default function CareerForm({ career, formType, setShowEditModal }: { car
                     </div>
                   )}
                 </div>
+                )}
               </div>
 
               {/* CV Review & Pre-screening Section */}
               <div style={{ marginBottom: "24px" }}>
-                <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", marginBottom: "16px" }}>
-                  <h2 style={{ fontSize: "18px", fontWeight: 600, color: "#111827", margin: 0 }}>
-                    <i className="la la-angle-down" style={{ fontSize: 20, marginRight: "8px" }}></i>
+                <div 
+                  style={{ display: "flex", justifyContent: "space-between", alignItems: "center", marginBottom: "16px", cursor: "pointer" }}
+                  onClick={() => setExpandedSections({...expandedSections, cvReview: !expandedSections.cvReview})}
+                >
+                  <h2 style={{ fontSize: "18px", fontWeight: 600, color: "#111827", margin: 0, display: "flex", alignItems: "center" }}>
+                    <i className={`la la-angle-${expandedSections.cvReview ? 'down' : 'right'}`} style={{ fontSize: 20, marginRight: "8px" }}></i>
                     CV Review & Pre-screening
                   </h2>
                   <button
                     type="button"
-                    onClick={() => setCurrentStep(2)}
+                    onClick={(e) => {
+                      e.stopPropagation();
+                      setCurrentStep(2);
+                    }}
                     style={{
                       padding: "6px 12px",
                       backgroundColor: "transparent",
@@ -2625,6 +2792,7 @@ export default function CareerForm({ career, formType, setShowEditModal }: { car
                   </button>
                 </div>
 
+                {expandedSections.cvReview && (
                 <div style={{ backgroundColor: "#FFFFFF", borderRadius: "8px", padding: "20px", boxShadow: "0 1px 3px 0 rgba(0, 0, 0, 0.1)" }}>
                   <div style={{ marginBottom: "20px" }}>
                     <h3 style={{ fontSize: "14px", fontWeight: 600, color: "#6B7280", marginBottom: "8px" }}>CV Screening</h3>
@@ -2652,18 +2820,25 @@ export default function CareerForm({ career, formType, setShowEditModal }: { car
                     </div>
                   )}
                 </div>
+                )}
               </div>
 
               {/* AI Interview Setup Section */}
               <div>
-                <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", marginBottom: "16px" }}>
-                  <h2 style={{ fontSize: "18px", fontWeight: 600, color: "#111827", margin: 0 }}>
-                    <i className="la la-angle-down" style={{ fontSize: 20, marginRight: "8px" }}></i>
+                <div 
+                  style={{ display: "flex", justifyContent: "space-between", alignItems: "center", marginBottom: "16px", cursor: "pointer" }}
+                  onClick={() => setExpandedSections({...expandedSections, aiInterview: !expandedSections.aiInterview})}
+                >
+                  <h2 style={{ fontSize: "18px", fontWeight: 600, color: "#111827", margin: 0, display: "flex", alignItems: "center" }}>
+                    <i className={`la la-angle-${expandedSections.aiInterview ? 'down' : 'right'}`} style={{ fontSize: 20, marginRight: "8px" }}></i>
                     AI Interview Setup
                   </h2>
                   <button
                     type="button"
-                    onClick={() => setCurrentStep(3)}
+                    onClick={(e) => {
+                      e.stopPropagation();
+                      setCurrentStep(3);
+                    }}
                     style={{
                       padding: "6px 12px",
                       backgroundColor: "transparent",
@@ -2682,6 +2857,7 @@ export default function CareerForm({ career, formType, setShowEditModal }: { car
                   </button>
                 </div>
 
+                {expandedSections.aiInterview && (
                 <div style={{ backgroundColor: "#FFFFFF", borderRadius: "8px", padding: "20px", boxShadow: "0 1px 3px 0 rgba(0, 0, 0, 0.1)" }}>
                   <div style={{ marginBottom: "20px" }}>
                     <h3 style={{ fontSize: "14px", fontWeight: 600, color: "#6B7280", marginBottom: "8px" }}>AI Interview Screening</h3>
@@ -2720,13 +2896,14 @@ export default function CareerForm({ career, formType, setShowEditModal }: { car
                     ))}
                   </div>
                 </div>
+                )}
               </div>
             </div>
           )}
 
         </div>
 
-        <div style={{ width: "25%", display: "flex", flexDirection: "column", gap: 8 }}>
+        <div style={{ width: "30%", display: "flex", flexDirection: "column", gap: 8 }}>
           {/* Tips Section */}
           <TipsSection step={currentStep} />
         </div>
