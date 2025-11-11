@@ -34,11 +34,13 @@ export async function POST(request: Request) {
     const settings = await db.collection("global-settings").findOne(
       { name: "global-settings" },
       {
-        analysis_prompt: 0,
-        summary_prompt: 0,
-        question_gen_prompt: 0,
-        name: 0,
-        _id: 0,
+        projection: {
+          analysis_prompt: 0,
+          summary_prompt: 0,
+          question_gen_prompt: 0,
+          name: 0,
+          _id: 0,
+        }
       }
     );
 

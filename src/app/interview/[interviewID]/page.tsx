@@ -10,9 +10,7 @@ export default function InterviewPage() {
 
   useEffect(() => {
     if (!localStorage.user) {
-      `${
-/job-portal
-      }`;
+      window.location.href = '/job-portal';
     }
   }, []);
 
