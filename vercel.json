@@ -1,0 +1,16 @@
+{
+  "functions": {
+    "src/app/api/add-career/route.ts": {
+      "memory": 1024,
+      "maxDuration": 10
+    },
+    "src/app/api/update-career/route.tsx": {
+      "memory": 1024,
+      "maxDuration": 10
+    },
+    "src/app/api/save-career-draft/route.ts": {
+      "memory": 1024,
+      "maxDuration": 10
+    }
+  }
+}
