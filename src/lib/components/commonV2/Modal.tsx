@@ -10,6 +10,7 @@ import axios from "axios";
 import { useEffect, useState } from "react";
 import { processDate } from "@/lib/utils/helpersV2";
 import { getStage } from "@/lib/Utils";
+import SafeHTML from "@/lib/components/common/SafeHTML";
 
 export default function ({ modalType, setModalType }) {
   const [applicationData, setApplicationData] = useState(null);
@@ -526,115 +527,93 @@ export default function ({ modalType, setModalType }) {
         <div className={`${styles.modalContent} ${styles[modalType]}`}>
           <div className={styles.gradientContainer}>
             <div className={styles.jobDetailsContainer}>
-              {applicationData.jobTitle && (
-                <div className={styles.titleContainer}>
-                  <span>{applicationData.jobTitle}</span>
-                </div>
-              )}
-
-              {applicationData.organization &&
-                applicationData.organization.name && (
-                  <span className={styles.companyName}>
-                    {applicationData.organization.name}
-                  </span>
+              {/* Header Section */}
+              <div className={styles.headerSection}>
+                {applicationData.jobTitle && (
+                  <h1 className={styles.jobTitleMain}>{applicationData.jobTitle}</h1>
                 )}
 
-              {applicationData.city && (
-                <span className={`${styles.details} ${styles.withMargin}`}>
-                  <img alt="" src={assetConstants.mapPin} />
-                  {applicationData.city}
-                </span>
-              )}
+                <div className={styles.metaInfo}>
+                  {applicationData.organization?.name && (
+                    <span className={styles.metaItem}>{applicationData.organization.name}</span>
+                  )}
+                  {applicationData.createdAt && (
+                    <span className={styles.metaItem}>Today</span>
+                  )}
+                </div>
+              </div>
 
-              {applicationData.createdAt && (
-                <span className={styles.details}>
-                  <img alt="" src={assetConstants.clock} />
-                  {processDate(applicationData.createdAt)}
-                </span>
-              )}
+              {/* Apply Button */}
+              <button 
+                className={styles.applyBtn}
+                onClick={() => {
+                  setModalType(null);
+                }}
+              >
+                Apply Now
+              </button>
 
-              {applicationData.workArrangement && (
-                <div className={styles.tagContainer}>
-                  <span>{applicationData.workArrangement}</span>
+              {/* Employment Type */}
+              {applicationData.employmentType && (
+                <div className={styles.infoSection}>
+                  <div className={styles.infoLabel}>Employment Type</div>
+                  <div className={styles.infoValue}>{applicationData.employmentType}</div>
                 </div>
               )}
 
-              <hr />
-
-              {/* Employment Type and Work Arrangement */}
-              {(applicationData.employmentType || applicationData.workArrangement) && (
-                <div className={styles.detailsRow}>
-                  {applicationData.employmentType && (
-                    <div className={styles.detailItem}>
-                      <span className={styles.label}>Employment Type</span>
-                      <span className={styles.value}>{applicationData.employmentType}</span>
-                    </div>
-                  )}
-                  {applicationData.workArrangement && (
-                    <div className={styles.detailItem}>
-                      <span className={styles.label}>Work Arrangement</span>
-                      <span className={styles.value}>{applicationData.workArrangement}</span>
-                    </div>
-                  )}
-                </div>
-              )}
-
-              {/* Location Details */}
-              {(applicationData.country || applicationData.state || applicationData.city) && (
-                <div className={styles.detailsRow}>
-                  {applicationData.country && (
-                    <div className={styles.detailItem}>
-                      <span className={styles.label}>Country</span>
-                      <span className={styles.value}>{applicationData.country}</span>
-                    </div>
-                  )}
-                  {applicationData.state && (
-                    <div className={styles.detailItem}>
-                      <span className={styles.label}>State / Province</span>
-                      <span className={styles.value}>{applicationData.state}</span>
-                    </div>
-                  )}
-                  {applicationData.city && (
-                    <div className={styles.detailItem}>
-                      <span className={styles.label}>City</span>
-                      <span className={styles.value}>{applicationData.city}</span>
-                    </div>
-                  )}
-                </div>
-              )}
-
-              {/* Salary Range */}
-              {(applicationData.minSalary || applicationData.maxSalary) && (
-                <div className={styles.detailsRow}>
-                  {applicationData.minSalary && (
-                    <div className={styles.detailItem}>
-                      <span className={styles.label}>Minimum Salary</span>
-                      <span className={styles.value}>{applicationData.minSalary}</span>
-                    </div>
-                  )}
-                  {applicationData.maxSalary && (
-                    <div className={styles.detailItem}>
-                      <span className={styles.label}>Maximum Salary</span>
-                      <span className={styles.value}>{applicationData.maxSalary}</span>
-                    </div>
-                  )}
+              {/* Country */}
+              {applicationData.country && (
+                <div className={styles.infoSection}>
+                  <div className={styles.infoLabel}>Country</div>
+                  <div className={styles.infoValue}>{applicationData.country}</div>
                 </div>
               )}
 
               {/* Job Description */}
               {applicationData.description && (
-                <>
-                  <div className={styles.sectionTitle}>Job Description</div>
-                  <p
+                <div className={styles.descriptionSection}>
+                  <h2 className={styles.sectionTitle}>About This Role</h2>
+                  <div
                     className={styles.jobDescription}
                     dangerouslySetInnerHTML={{
                       __html: applicationData.description,
                     }}
                   />
-                </>
+                </div>
               )}
 
-              <button onClick={handleClose}>Close</button>
+              {/* Company Section */}
+              <div className={styles.companySection}>
+                <h2 className={styles.sectionTitle}>About The Company</h2>
+                <div className={styles.companyCard}>
+                  <div className={styles.companyLogo}>
+                    {applicationData.organization?.name?.charAt(0) || 'W'}
+                  </div>
+                  <div className={styles.companyInfo}>
+                    <div className={styles.companyNameTitle}>
+                      {applicationData.organization?.name || 'White Cloak Technologies, Inc.'}
+                    </div>
+                    <div className={styles.companyDesc}>
+                      Learn more about {applicationData.organization?.name || 'White Cloak'} and discover exciting career opportunities.
+                    </div>
+                    <button 
+                      className={styles.learnMoreBtn}
+                      onClick={() => {
+                        if (applicationData.organization?.website) {
+                          window.open(applicationData.organization.website, '_blank');
+                        } else if (applicationData.organization?.name) {
+                          window.open(`https://www.google.com/search?q=${encodeURIComponent(applicationData.organization.name)}`, '_blank');
+                        } else {
+                          window.open('/companies', '_blank');
+                        }
+                      }}
+                    >
+                      Learn More →
+                    </button>
+                  </div>
+                </div>
+              </div>
+
             </div>
           </div>
         </div>

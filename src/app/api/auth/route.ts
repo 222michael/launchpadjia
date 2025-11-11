@@ -3,7 +3,7 @@ import connectMongoDB from "@/lib/mongoDB/mongoDB";
 
 export async function POST(request: Request) {
   try {
-    const { name, email, image } = await request.json();
+    const { name, email, image, loginType } = await request.json();
 
     // Validate required fields
     if (!name || !email) {
@@ -14,6 +14,9 @@ export async function POST(request: Request) {
     }
 
     const { db } = await connectMongoDB();
+    
+    // Determine if user is logging in from recruiter page or applicant page
+    const isRecruiterLogin = loginType !== "job-portal" && loginType !== "whitecloak-careers";
     
     // Check if user is an admin
     const admin = await db.collection("admins").findOne({ email: email });
@@ -66,24 +69,56 @@ export async function POST(request: Request) {
       return NextResponse.json(applicant);
     }
 
-    // Create new applicant if not found anywhere
-    if (!applicant) {
-      await db.collection("applicants").insertOne({
-        email: email,
-        name: name,
-        image: image,
-        createdAt: new Date(),
-        lastSeen: new Date(),
-        role: "applicant",
+    // AUTO-REGISTRATION based on login type
+    if (isRecruiterLogin) {
+      // User is logging in from recruiter page - create recruiter account
+      const whiteCloakOrg = await db.collection("organizations").findOne({ 
+        name: "White Cloak" 
       });
       
-      return NextResponse.json({
-        email: email,
-        name: name,
-        image: image,
-        role: "applicant",
-      });
+      if (whiteCloakOrg) {
+        // Create new member in White Cloak organization with admin role
+        const newMember = {
+          email: email,
+          name: name,
+          image: image,
+          orgID: whiteCloakOrg._id.toString(),
+          role: "admin", // Give them admin role for full access
+          status: "joined",
+          careers: [],
+          createdAt: new Date(),
+          lastLogin: new Date(),
+        };
+        
+        await db.collection("members").insertOne(newMember);
+        
+        return NextResponse.json({
+          email: newMember.email,
+          name: newMember.name,
+          image: newMember.image,
+          role: "admin",
+          orgID: newMember.orgID,
+        });
+      }
     }
+    
+    // User is logging in from applicant page OR White Cloak org not found
+    // Create new applicant account
+    await db.collection("applicants").insertOne({
+      email: email,
+      name: name,
+      image: image,
+      createdAt: new Date(),
+      lastSeen: new Date(),
+      role: "applicant",
+    });
+    
+    return NextResponse.json({
+      email: email,
+      name: name,
+      image: image,
+      role: "applicant",
+    });
 
     return NextResponse.json({
       message: "Default Fallback",

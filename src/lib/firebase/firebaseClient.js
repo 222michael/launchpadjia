@@ -46,6 +46,7 @@ export async function signInWithGoogle(type) {
 
   localStorage.authToken = res.user._delegate.accessToken;
 
+  // Temporarily store user data - will be updated with correct role from API
   localStorage.user = JSON.stringify({
     email: profile.email,
     image: profile.picture,
@@ -58,8 +59,19 @@ export async function signInWithGoogle(type) {
       name: profile.name,
       email: profile.email,
       image: profile.picture,
+      loginType: type, // Pass the login type (recruiter vs applicant)
     })
     .then(async (res) => {
+      // Update localStorage with the actual role from the API
+      if (res.data.role) {
+        localStorage.user = JSON.stringify({
+          email: profile.email,
+          image: profile.picture,
+          name: profile.name,
+          role: res.data.role,
+        });
+        localStorage.setItem("role", res.data.role);
+      }
       if (
         res.data.error &&
         profile.email.split("@")[1] !== "whitecloak.com" &&
@@ -79,6 +91,8 @@ export async function signInWithGoogle(type) {
       console.log("Auth API Response:", res.data);
       console.log("User role:", res.data.role);
 
+      // Check if user is trying to access recruiter dashboard but is an applicant
+      // Note: Auto-registered users will have role "member" so they won't see this error
       if (
         (host.includes("localhost") || host.includes("hirejia.ai")) &&
         res.data.role == "applicant" &&
@@ -119,6 +133,8 @@ export async function signInWithGoogle(type) {
         localStorage.removeItem("user");
         return false;
       }
+      
+      // Auto-registered users (role: "member") will skip the above check and continue
 
       // handle direct interview link redirects
       if (window.location.search.includes("?directInterviewID")) {
